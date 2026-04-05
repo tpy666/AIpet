@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">AI 宠物助手</string>
+    <string name="splash_title">AI 宠物助手</string>
+    <string name="splash_subtitle">您的智能宠物伙伴</string>
+    <string name="main_title">欢迎使用</string>
+    <string name="btn_create_pet">➕ 创建新角色</string>
+    <string name="btn_pet_list">📋 查看我的角色</string>
+    <string name="btn_chat">💬 开始聊天</string>
+    <string name="create_pet_title">创建新角色</string>
+    <string name="pet_list_title">我的角色</string>
+    <string name="chat_title">聊天</string>
+    <string name="hint_pet_name">请输入角色名称</string>
+    <string name="hint_pet_desc">请输入角色的描述信息</string>
+    <string name="hint_message">输入消息...</string>
+    <string name="btn_create">创建</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_send">发送</string>
+    <string name="msg_empty_pet_name">请输入角色名称</string>
+    <string name="msg_create_success">角色创建成功！</string>
+    <string name="msg_empty_message">请输入消息</string>
+    <string name="msg_send_success">消息已发送</string>
+    <string name="msg_empty_hint">暂无角色，请先创建</string>
+</resources>

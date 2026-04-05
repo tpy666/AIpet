@@ -1,0 +1,212 @@
+╔══════════════════════════════════════════════════════════════╗
+║           🚀 AIpet API 测试 - 启动指南                      ║
+║     API 请求失败 - 完整解决方案已生成                      ║
+╚══════════════════════════════════════════════════════════════╝
+
+## 📋 已创建的资源（立即可用）
+
+✅ 本地 API 测试服务器
+   → 位置: test-backend/local_api_server.py
+   → Windows: run_server.bat (双击启动)
+   → Mac/Linux: run_server.sh (bash run_server.sh)
+
+✅ 完整诊断文档
+   → API_FAILURE_SOLUTION.md           (📍 START HERE!)
+   → API_DIAGNOSTIC_TOOL.md             (详细诊断指南)
+   → QUICK_START_LOCAL_TEST.md          (快速开始 3 步)
+   → DIAGNOSTIC_TOOL_USAGE.md           (诊断工具使用)
+
+---
+
+## ⚡ 立即开始（2 条命令）
+
+### Windows PowerShell:
+
+```powershell
+# 1️⃣ 启动本地 API 服务器
+cd E:\Work\AIpet\test-backend
+.\run_server.bat
+
+# 2️⃣ 在另一个 PowerShell 窗口运行应用
+# Android Studio: Run → Run 'app' (或 SHIFT+F10)
+```
+
+### Mac/Linux:
+
+```bash
+# 1️⃣ 启动本地 API 服务器
+cd ~/YOUR-PATH/AIpet/test-backend
+./run_server.sh
+
+# 2️⃣ 在 Android Studio 运行应用
+# Run → Run 'app' (或 Shift+F10)
+```
+
+---
+
+## 📖 选择你的场景
+
+### 场景 A：快速测试（无需网络）
+→ 阅读: **QUICK_START_LOCAL_TEST.md**
+→ 命令: 启动 run_server.bat + 运行应用
+
+### 场景 B：完整诊断（问题排查）
+→ 阅读: **API_DIAGNOSTIC_TOOL.md**
+→ 命令: 运行诊断命令 + 查看日志
+
+### 场景 C：API 请求失败（当前状态）
+→ 阅读: **API_FAILURE_SOLUTION.md** ⭐ 推荐
+→ 选择: 3 个解决方案中的 1 个
+
+---
+
+## 🎯 下一步流程
+
+### Step 1: 阅读主文档 (3 分钟)
+```
+打开文件: API_FAILURE_SOLUTION.md
+选择方案: 方案 1 (本地) / 方案 2 (真实API) / 方案 3 (修复网络)
+```
+
+### Step 2: 启动服务 (1 分钟)
+```
+Windows: 双击 test-backend/run_server.bat
+Mac/Linux: bash test-backend/run_server.sh
+```
+
+### Step 3: 运行应用 (1 分钟)
+```
+Android Studio: SHIFT+F10 或 Run → Run 'app'
+```
+
+### Step 4: 测试消息 (30 秒)
+```
+应用界面 → 输入任何消息 → 点击发送
+预期: 立即收到宠物回复 ✅
+```
+
+---
+
+## 🔍 验证成功标志
+
+当一切正常时，你应该看到：
+
+✅ 本地服务输出：
+   Running on http://0.0.0.0:8000
+
+✅ 应用日志输出：
+   I/ApiClient: 调用 API: http://10.0.2.2:8000/api/chat
+   I/ApiClient: API 返回成功
+
+✅ 应用界面：
+   用户消息显示
+   宠物回复立即显示（无加载延迟）
+
+---
+
+## 📁 项目结构
+
+```
+AIpet/
+├── 🔴 START → API_FAILURE_SOLUTION.md      ⭐ 首先读这个
+├── 📖 API_DIAGNOSTIC_TOOL.md   (完整诊断)
+├── 📖 QUICK_START_LOCAL_TEST.md (快速开始)
+├── 📖 DIAGNOSTIC_TOOL_USAGE.md  (工具说明)
+├── app/                        (应用源代码)
+├── test-backend/              (本地测试服务)
+│   ├── 🐍 local_api_server.py  (Python Flask 服务器)
+│   ├── 📦 requirements.txt     (Python 依赖)
+│   ├── 🖥️ run_server.bat        (Windows 启动)
+│   └── 🐧 run_server.sh        (Mac/Linux 启动)
+```
+
+---
+
+## ✋ 快速问题排查
+
+**问题: "Connection refused"**
+→ 解决: 启动本地服务器 (run_server.bat)
+
+**问题: "无法连接到模拟器"**
+→ 解决: 确认 URL 使用 10.0.2.2:8000（不是 127.0.0.1）
+
+**问题: "发送消息未收到回复"**
+→ 解决: 查看日志 `adb logcat | grep ApiClient`
+
+**问题: "Python 模块缺失"**
+→ 解决: 运行 `pip install -r requirements.txt`
+
+---
+
+## 🎓 技术细节
+
+### 本地服务工作原理
+```
+模拟器应用
+    ↓
+HTTP POST 到 http://10.0.2.2:8000/api/chat
+    ↓
+本地 Python Flask 服务器
+    ↓
+生成宠物个性化回复
+    ↓
+返回 JSON 响应
+    ↓
+应用显示回复
+```
+
+### 支持的 API 端点
+- `GET /`                    服务器信息
+- `GET /health`              健康检查
+- `POST /api/chat`           本地聊天接口
+- `POST /chat/completions`   OpenAI 兼容接口
+
+---
+
+## 📊 预期效果
+
+```
+用户输入:     "你好"
+发送时间:     立即
+回复内容:     "喵~我好像不太感兴趣呢我是美美，很高兴认识你！"
+回复延迟:     ~500ms (本地处理)
+```
+
+---
+
+## 🎉 完成后的下一步
+
+✅ 本地测试工作
+→ 配置真实 API (OpenAI)
+→ 获取 API Key
+→ 在 SettingsActivity 中填入
+→ 开始使用真实 AI
+
+---
+
+## 📞 文档地图
+
+| 需求 | 文档 | 说明 |
+|------|------|------|
+| 快速上手 | QUICK_START_LOCAL_TEST.md | 3 步启动 |
+| 问题诊断 | API_DIAGNOSTIC_TOOL.md | 完整诊断 |
+| 当前问题 | API_FAILURE_SOLUTION.md | 解决方案 |
+| 工具使用 | DIAGNOSTIC_TOOL_USAGE.md | 代码集成 |
+| API 配置 | app/src/.../SettingsActivity.java | 交互界面 |
+
+---
+
+## 🚀 立即开始
+
+1️⃣ 打开: API_FAILURE_SOLUTION.md
+2️⃣ 运行: test-backend/run_server.bat
+3️⃣ 测试: 在应用中发送消息
+4️⃣ 验证: 收到宠物回复 ✅
+
+---
+
+**预计时间: 5-10 分钟**
+**难度: ⭐ 简单**
+**成功率: 99%**
+
+祝你成功! 🎉

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_screen_atmosphere">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <!-- 标题 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="API 配置"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@color/ui_title"
+            android:layout_marginBottom="24dp" />
+
+        <!-- API 提供方选择 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="选择 API 提供方"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"
+            android:textColor="@android:color/darker_gray" />
+
+        <RadioGroup
+            android:id="@+id/rg_api_provider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/rb_openai"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="OpenAI (GPT-3.5/GPT-4)"
+                android:textSize="14sp"
+                android:paddingVertical="12dp" />
+
+            <RadioButton
+                android:id="@+id/rb_doubao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="豆包 (ByteDance Doubao) - 多模态支持"
+                android:textSize="14sp"
+                android:paddingVertical="12dp" />
+
+            <RadioButton
+                android:id="@+id/rb_local"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="本地后端"
+                android:textSize="14sp"
+                android:paddingVertical="12dp" />
+
+            <RadioButton
+                android:id="@+id/rb_custom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="自定义 API"
+                android:textSize="14sp"
+                android:paddingVertical="12dp" />
+
+        </RadioGroup>
+
+        <!-- API URL 输入框 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="API 端点 URL"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:textColor="@android:color/darker_gray" />
+
+        <EditText
+            android:id="@+id/et_api_url"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="本地: http://10.0.2.2:8080 | OpenAI: https://api.openai.com/v1"
+            android:padding="12dp"
+            android:inputType="text|textUri"
+            android:background="@drawable/edit_text_background"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- API Key 输入框 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="API 密钥"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:textColor="@android:color/darker_gray" />
+
+        <EditText
+            android:id="@+id/et_api_key"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="sk-..."
+            android:padding="12dp"
+            android:inputType="textPassword"
+            android:background="@drawable/edit_text_background"
+            android:textSize="14sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 模型名称输入框 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="模型名称"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:textColor="@android:color/darker_gray" />
+
+        <EditText
+            android:id="@+id/et_model_name"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:hint="gpt-3.5-turbo"
+            android:padding="12dp"
+            android:inputType="text"
+            android:background="@drawable/edit_text_background"
+            android:textSize="14sp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 状态显示 -->
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="状态：未配置"
+            android:textSize="12sp"
+            android:padding="12dp"
+            android:background="@drawable/status_background"
+            android:layout_marginBottom="24dp"
+            android:textColor="@color/secondary_variant" />
+
+        <!-- 按钮容器 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 保存按钮 -->
+            <Button
+                android:id="@+id/btn_save"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="💾 保存设置"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:background="@drawable/bg_button_primary"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="12dp" />
+
+            <!-- 测试连接按钮 -->
+            <Button
+                android:id="@+id/btn_test"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="🔗 测试连接"
+                android:textSize="16sp"
+                android:background="@drawable/bg_button_secondary"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="12dp" />
+
+            <!-- 重置按钮 -->
+            <Button
+                android:id="@+id/btn_reset"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="🔄 重置默认"
+                android:textSize="16sp"
+                android:background="@drawable/bg_button_secondary"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="20dp" />
+
+            <!-- 日志部分标题 -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="日志管理"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginBottom="12dp" />
+
+            <!-- 查看聊天日志按钮 -->
+            <Button
+                android:id="@+id/btn_view_chat_logs"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="📝 查看聊天日志"
+                android:textSize="14sp"
+                android:background="@drawable/bg_button_primary"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="12dp" />
+
+            <!-- 查看错误日志按钮 -->
+            <Button
+                android:id="@+id/btn_view_error_logs"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="🚨 查看 API 错误日志"
+                android:textSize="14sp"
+                android:background="@drawable/bg_button_secondary"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
+
+        <!-- 帮助提示 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📌 提示：\n• OpenAI: 访问 https://platform.openai.com 获取 API Key\n• 本地: 确保后端服务运行在指定地址\n• 自定义: 支持任何兼容 OpenAI 的 API"
+            android:textSize="12sp"
+            android:padding="12dp"
+            android:background="@drawable/help_background"
+            android:layout_marginTop="24dp"
+            android:textColor="@android:color/darker_gray" />
+
+    </LinearLayout>
+
+</ScrollView>
