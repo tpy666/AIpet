@@ -3,8 +3,6 @@ package com.example.aipet.util;
 import android.content.Context;
 import android.util.Log;
 
-import com.example.aipet.util.Constants;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -130,7 +128,10 @@ public class ChatLogger {
         try {
             File logDir = new File(context.getFilesDir(), Constants.LOG_DIR_NAME);
             if (!logDir.exists()) {
-                logDir.mkdirs();
+                boolean created = logDir.mkdirs();
+                if (!created) {
+                    Log.w(TAG, "Log directory creation failed or already handled: " + logDir.getAbsolutePath());
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to create log directory", e);
@@ -244,10 +245,10 @@ public class ChatLogger {
         try {
             String fileName = Constants.LOG_FILE_PREFIX + fileNameFormat.format(new Date()) + Constants.LOG_FILE_EXTENSION;
             File logFile = new File(context.getFilesDir(), Constants.LOG_DIR_NAME + File.separator + fileName);
-            
-            FileWriter writer = new FileWriter(logFile, true);
-            writer.write(entry.toString() + "\n");
-            writer.close();
+
+            try (FileWriter writer = new FileWriter(logFile, true)) {
+                writer.write(entry.toString() + "\n");
+            }
         } catch (IOException e) {
             Log.e(TAG, "Failed to write log file", e);
         }
@@ -315,7 +316,9 @@ public class ChatLogger {
                 File[] files = logDir.listFiles();
                 if (files != null) {
                     for (File file : files) {
-                        file.delete();
+                        if (!file.delete()) {
+                            Log.w(TAG, "Failed to delete log file: " + file.getAbsolutePath());
+                        }
                     }
                 }
             }

@@ -33,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="暂无角色，请先创建"
+                android:text="@string/pet_list_empty_hint"
                 android:textColor="@color/ui_soft_text"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -45,7 +45,7 @@
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_button_primary"
                 android:minWidth="160dp"
-                android:text="去创建角色"
+                android:text="@string/pet_list_go_create"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:textStyle="bold" />

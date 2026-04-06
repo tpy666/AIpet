@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -203,7 +204,7 @@ public class ChatRequest extends BaseApiRequest {
          * 获取宠物简要描述
          */
         public String getDescription() {
-            return String.format(
+            return String.format(Locale.CHINA,
                 "宠物：%s（%s）| 性格：%s | 说话风格：%s | 外观：%s",
                 name, species, personality, speakingStyle, appearance
             );
@@ -214,7 +215,7 @@ public class ChatRequest extends BaseApiRequest {
          * 用于 OpenAI API 的 system role
          */
         public String getSystemPrompt() {
-            return String.format(
+            return String.format(Locale.CHINA,
                 "你是一个名叫 %s 的 %s 虚拟宠物助手。\n" +
                 "你的性格特征：%s\n" +
                 "你的说话风格：%s\n" +

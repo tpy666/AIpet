@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="home_chip_red">#D93434</color>
+    <color name="home_chip_red_dark">#CC2F2F</color>
+    <color name="home_bubble_green">#A6D63A</color>
+    <color name="home_bubble_text">#2E4A12</color>
+    <color name="home_pet_blue">#3383D4</color>
+    <color name="home_side_bg">#D9DCE1</color>
+    <color name="home_side_icon">#F68D89</color>
+    <color name="home_nav_teal">#13B9B0</color>
+    <color name="home_input_bg">#ECECEC</color>
+    <color name="home_send_bg">#D16C83</color>
+</resources>

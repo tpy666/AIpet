@@ -2,6 +2,8 @@ package com.example.aipet.network;
 
 import androidx.annotation.NonNull;
 
+import java.util.Locale;
+
 /**
  * API 配置管理类 - 支持多个 API 提供商和灵活配置
  * 

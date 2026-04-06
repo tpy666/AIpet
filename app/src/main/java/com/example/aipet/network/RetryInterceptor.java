@@ -3,6 +3,7 @@ package com.example.aipet.network;
 import androidx.annotation.NonNull;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -163,6 +164,7 @@ public class RetryInterceptor implements Interceptor {
     private void logRetry(int attemptNumber, String reason) {
         if (apiConfig.isDebugLogging()) {
             String message = String.format(
+                Locale.ROOT,
                 "[重试 %d/%d] %s",
                 attemptNumber,
                 maxRetry,

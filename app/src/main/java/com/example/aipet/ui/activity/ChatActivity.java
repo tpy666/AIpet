@@ -35,6 +35,7 @@ import com.example.aipet.util.store.PetStore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 聊天页面：RecyclerView + 网络 API 调用（第二阶段升级版）
@@ -81,7 +82,7 @@ public class ChatActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        setupScreen("聊天", true);
+        setupScreen(getString(R.string.chat_title), true);
         // 进入聊天页时再次同步配置，确保从设置页返回或冷启动都使用最新 provider。
         NetworkConfigBootstrap.syncFromStorage(this);
         apiConfig = ApiConfig.getInstance();
@@ -113,7 +114,7 @@ public class ChatActivity extends BaseActivity {
     private void loadPet() {
         Pet selectedPet = null;
         if (getIntent() != null && getIntent().hasExtra(EXTRA_PET)) {
-            selectedPet = (Pet) getIntent().getSerializableExtra(EXTRA_PET, Pet.class);
+            selectedPet = getIntent().getSerializableExtra(EXTRA_PET, Pet.class);
         }
 
         availablePets.clear();
@@ -127,13 +128,13 @@ public class ChatActivity extends BaseActivity {
 
         activePet = selectedPet;
         if (activePet == null) {
-            tvChatPetInfo.setText("当前没有可聊天的角色");
+            tvChatPetInfo.setText(R.string.chat_no_role_available);
             tvChatEmptyHint.setVisibility(View.VISIBLE);
-            tvChatEmptyHint.setText("请先创建一个角色，再开始聊天。");
+            tvChatEmptyHint.setText(R.string.chat_create_role_first);
             spChatPetSelector.setVisibility(View.GONE);
             rvChat.setVisibility(View.GONE);
             layoutInputBar.setVisibility(View.GONE);
-            Toast.makeText(this, "请先创建宠物角色，然后再聊天", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, R.string.chat_create_pet_then_chat, Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -191,26 +192,38 @@ public class ChatActivity extends BaseActivity {
             return;
         }
 
-        tvChatPetInfo.setText(String.format("当前角色：%s · %s · %s",
-                activePet.getName(), activePet.getSpecies(), activePet.getPersonality()));
+        tvChatPetInfo.setText(getString(
+                R.string.chat_current_role_format,
+                activePet.getName(),
+                activePet.getSpecies(),
+                activePet.getPersonality()
+        ));
 
         if (resetConversation) {
+            int oldCount = messageList.size();
             messageList.clear();
-            chatAdapter.notifyDataSetChanged();
-            String welcome = String.format("你好，我是%s，%s的%s，陪你说说心里话吧～", activePet.getName(), activePet.getSpecies(), activePet.getPersonality());
+            if (oldCount > 0) {
+                chatAdapter.notifyItemRangeRemoved(0, oldCount);
+            }
+            String welcome = getString(
+                    R.string.chat_welcome_format,
+                    activePet.getName(),
+                    activePet.getSpecies(),
+                    activePet.getPersonality()
+            );
             appendMessage(new Message(Message.ROLE_ASSISTANT, welcome, activePet.getId()));
         }
     }
 
     private void sendMessage() {
         if (activePet == null) {
-            Toast.makeText(this, "当前未绑定角色，请先创建宠物", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.chat_no_role_bound, Toast.LENGTH_SHORT).show();
             return;
         }
 
         String text = etMessageInput.getText().toString().trim();
         if (TextUtils.isEmpty(text)) {
-            Toast.makeText(this, "请输入消息内容", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.msg_empty_message, Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -224,7 +237,7 @@ public class ChatActivity extends BaseActivity {
         
         // 禁用发送按钮，显示加载状态
         btnSend.setEnabled(false);
-        btnSend.setText("加载中...");
+        btnSend.setText(R.string.chat_send_loading);
         
         // 根据配置选择使用 API 还是本地模拟
         if (useNetworkApi) {
@@ -323,7 +336,7 @@ public class ChatActivity extends BaseActivity {
                     chatLogger.logApiError(errorMessage, "NETWORK_ERROR", errorMessage);
                     chatLogger.logFallbackUsage("API 请求失败，使用本地模拟");
                     Toast.makeText(ChatActivity.this, 
-                            "API 请求失败: " + errorMessage + "\n将使用本地回复", 
+                            getString(R.string.chat_api_failed_with_fallback, errorMessage),
                             Toast.LENGTH_SHORT).show();
                     
                     // 降级到本地模拟
@@ -361,42 +374,41 @@ public class ChatActivity extends BaseActivity {
      */
     private void resetSendButton() {
         btnSend.setEnabled(true);
-        btnSend.setText("发送");
+        btnSend.setText(R.string.btn_send);
     }
 
     private String generatePetReply(String userInput) {
         if (activePet == null) {
-            return "我现在还没有名字，你可以先创建一个宠物哦~";
+            return getString(R.string.chat_fallback_reply_no_name);
         }
 
-        String base = "";
+        String base;
         String name = activePet.getName();
-        String species = activePet.getSpecies();
         String personality = activePet.getPersonality();
         String style = activePet.getSpeakingStyle();
 
         switch (style) {
             case "卖萌":
-                base = String.format("%s眨眨眼说：", name);
+                base = getString(R.string.chat_style_cute_format, name);
                 break;
             case "暖心":
-                base = String.format("%s温柔地说：", name);
+                base = getString(R.string.chat_style_warm_format, name);
                 break;
             case "幽默":
-                base = String.format("%s笑着回应：", name);
+                base = getString(R.string.chat_style_humor_format, name);
                 break;
             case "文艺":
-                base = String.format("%s轻声吟道：", name);
+                base = getString(R.string.chat_style_literary_format, name);
                 break;
             case "直白":
-                base = String.format("%s直接说道：", name);
+                base = getString(R.string.chat_style_direct_format, name);
                 break;
             default:
-                base = String.format("%s回应：", name);
+                base = getString(R.string.chat_style_default_format, name);
                 break;
         }
 
-        String mood = "";
+        String mood;
         if (personality.contains("温柔") || personality.contains("稳重")) {
             mood = "我会一直在你身边，陪你度过每一个不安的夜晚。";
         } else if (personality.contains("活泼") || personality.contains("撒娇")) {
@@ -412,7 +424,7 @@ public class ChatActivity extends BaseActivity {
             content = content.substring(0, 20) + "...";
         }
 
-        return String.format("%s \n你说‘%s’，%s \n可爱外观：%s。", base, content, mood, activePet.getAppearance());
+        return getString(R.string.chat_reply_format, base, content, mood, activePet.getAppearance());
     }    
     // ========== 日志工具方法 ==========
     

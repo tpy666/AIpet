@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_time_placeholder">08:30</string>
+    <string name="home_meta_placeholder">周一  上海  22°C 多云</string>
+    <string name="home_chat_notice_placeholder">聊天提醒: 0</string>
+    <string name="home_affection_placeholder">好感度: 50</string>
+    <string name="home_pet_name_placeholder">宠物: 小AI</string>
+
+    <string name="home_nav_help">帮助</string>
+    <string name="home_nav_feed">喂食</string>
+    <string name="home_nav_store">商店</string>
+    <string name="home_nav_outing">外出</string>
+    <string name="home_nav_settings">设置</string>
+    <string name="home_current_pet_none">未选角色</string>
+    <string name="home_current_pet_format">当前: %1$s</string>
+    <string name="home_cd_pet_switch_toggle">展开或收起快速角色切换</string>
+    <string name="home_pet_switch_item_format">切换到 %1$s</string>
+    <string name="home_pet_avatar_placeholder_hint">点击上传角色形象</string>
+    <string name="home_pet_avatar_upload_title">角色形象来源</string>
+    <string name="home_pet_avatar_upload_local">从本地选择图片</string>
+    <string name="home_pet_avatar_upload_remote">输入网络图片链接</string>
+    <string name="home_pet_avatar_remote_hint">https://example.com/avatar.jpg</string>
+    <string name="home_pet_avatar_remote_apply">应用链接</string>
+    <string name="home_pet_avatar_upload_reserved">已预留上传接口，后续可替换真实上传链路</string>
+
+    <string name="home_recent_title">最近聊天</string>
+    <string name="home_recent_fullscreen_title">最近聊天记录</string>
+    <string name="home_recent_empty">暂无聊天记录</string>
+    <string name="home_hint_chat_input">和宠物说点什么...</string>
+    <string name="home_voice_engine_unready">语音引擎未就绪</string>
+    <string name="home_voice_bubble_desc">宠物语音气泡，点击可朗读</string>
+    <string name="home_chat_notice_format">聊天提醒: %1$d</string>
+    <string name="home_affection_format">好感度: %1$d (%2$s)</string>
+
+    <string name="home_cd_affection">好感度查询</string>
+    <string name="home_cd_logs">聊天日志</string>
+    <string name="home_cd_dress_up">换装</string>
+    <string name="home_cd_pet_avatar">宠物形象</string>
+    <string name="home_cd_recent_toggle">查看最近聊天</string>
+    <string name="home_cd_recent_fullscreen">全屏查看聊天</string>
+    <string name="home_cd_recent_close">关闭全屏聊天</string>
+    <string name="home_cd_send">发送</string>
+</resources>

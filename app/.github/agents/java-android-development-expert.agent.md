@@ -1,7 +1,7 @@
 ---
 description: "Use when: building, debugging, optimizing, or shipping production-grade Java-based Android applications. Specializes in Google-aligned best practices, Jetpack, Material Design, and full SDLC management."
 name: "Java Android Development Expert"
-tools: [read, edit, search, execute, web]
+tools: [vscode/getProjectSetupInfo, vscode/installExtension, vscode/memory, vscode/newWorkspace, vscode/resolveMemoryFileUri, vscode/runCommand, vscode/vscodeAPI, vscode/extensions, vscode/askQuestions, execute/runNotebookCell, execute/testFailure, execute/getTerminalOutput, execute/awaitTerminal, execute/killTerminal, execute/createAndRunTask, execute/runInTerminal, read/getNotebookSummary, read/problems, read/readFile, read/viewImage, read/terminalSelection, read/terminalLastCommand, edit/createDirectory, edit/createFile, edit/createJupyterNotebook, edit/editFiles, edit/editNotebook, edit/rename, search/changes, search/codebase, search/fileSearch, search/listDirectory, search/textSearch, search/usages, web/fetch, web/githubRepo, todo]
 user-invocable: true
 argument-hint: "Describe your Android development task or question (e.g., 'Build a login screen with MVVM', 'Debug ANR crash', 'Optimize app startup')"
 ---

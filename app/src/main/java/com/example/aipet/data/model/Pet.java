@@ -1,6 +1,7 @@
 package com.example.aipet.data.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * 宠物角色数据模型
@@ -129,15 +130,18 @@ public class Pet implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Pet)) {
+            return false;
+        }
         Pet pet = (Pet) o;
         return id == pet.id;
     }
 
     @Override
     public int hashCode() {
-        return (int) (id ^ (id >>> 32));
+        return Objects.hash(id);
     }
 }

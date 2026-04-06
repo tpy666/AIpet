@@ -62,7 +62,7 @@
             android:layout_gravity="end"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_button_secondary"
-            android:text="删除"
+            android:text="@string/btn_delete"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textStyle="bold" />

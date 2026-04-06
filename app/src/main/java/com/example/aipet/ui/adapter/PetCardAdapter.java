@@ -19,8 +19,8 @@ import java.util.List;
 public class PetCardAdapter extends RecyclerView.Adapter<PetCardAdapter.PetCardViewHolder> {
 
     private List<Pet> petList;
-    private OnPetClickListener listener;
-    private OnPetDeleteListener deleteListener;
+    private final OnPetClickListener listener;
+    private final OnPetDeleteListener deleteListener;
 
     public interface OnPetClickListener {
         void onPetClick(Pet pet);
@@ -36,8 +36,29 @@ public class PetCardAdapter extends RecyclerView.Adapter<PetCardAdapter.PetCardV
     }
 
     public void setPetList(List<Pet> petList) {
+        int oldSize = this.petList == null ? 0 : this.petList.size();
         this.petList = petList;
-        notifyDataSetChanged();
+        int newSize = this.petList == null ? 0 : this.petList.size();
+
+        if (oldSize == 0 && newSize == 0) {
+            return;
+        }
+        if (oldSize == 0) {
+            notifyItemRangeInserted(0, newSize);
+            return;
+        }
+        if (newSize == 0) {
+            notifyItemRangeRemoved(0, oldSize);
+            return;
+        }
+
+        int sharedSize = Math.min(oldSize, newSize);
+        notifyItemRangeChanged(0, sharedSize);
+        if (newSize > oldSize) {
+            notifyItemRangeInserted(oldSize, newSize - oldSize);
+        } else if (oldSize > newSize) {
+            notifyItemRangeRemoved(newSize, oldSize - newSize);
+        }
     }
 
     @NonNull
@@ -50,11 +71,12 @@ public class PetCardAdapter extends RecyclerView.Adapter<PetCardAdapter.PetCardV
     @Override
     public void onBindViewHolder(@NonNull PetCardViewHolder holder, int position) {
         Pet pet = petList.get(position);
+        android.content.Context context = holder.itemView.getContext();
         holder.tvPetName.setText(pet.getName());
-        holder.tvPetSpecies.setText("物种: " + pet.getSpecies());
-        holder.tvPetPersonality.setText("性格: " + pet.getPersonality());
-        holder.tvPetSpeakingStyle.setText("说话风格: " + pet.getSpeakingStyle());
-        holder.tvPetAppearance.setText("外观: " + pet.getAppearance());
+        holder.tvPetSpecies.setText(context.getString(R.string.pet_species_format, pet.getSpecies()));
+        holder.tvPetPersonality.setText(context.getString(R.string.pet_personality_format, pet.getPersonality()));
+        holder.tvPetSpeakingStyle.setText(context.getString(R.string.pet_speaking_style_format, pet.getSpeakingStyle()));
+        holder.tvPetAppearance.setText(context.getString(R.string.pet_appearance_format, pet.getAppearance()));
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {

@@ -37,6 +37,29 @@ public class PetStore {
         saveAllPets(pets);
     }
 
+    @Nullable
+    public Pet getPetById(long petId) {
+        List<Pet> pets = getAllPets();
+        for (Pet pet : pets) {
+            if (pet.getId() == petId) {
+                return pet;
+            }
+        }
+        return null;
+    }
+
+    public boolean updatePet(@NonNull Pet updatedPet) {
+        List<Pet> pets = getAllPets();
+        for (int i = 0; i < pets.size(); i++) {
+            if (pets.get(i).getId() == updatedPet.getId()) {
+                pets.set(i, updatedPet);
+                saveAllPets(pets);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean deletePetById(long petId) {
         List<Pet> pets = getAllPets();
         boolean removed = false;

@@ -1,6 +1,7 @@
 package com.example.aipet.data.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * 聊天消息数据模型
@@ -140,15 +141,18 @@ public class Message implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Message)) {
+            return false;
+        }
         Message message = (Message) o;
         return id == message.id;
     }
 
     @Override
     public int hashCode() {
-        return (int) (id ^ (id >>> 32));
+        return Objects.hash(id);
     }
 }

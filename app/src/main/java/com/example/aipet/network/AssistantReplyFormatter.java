@@ -21,6 +21,17 @@ public final class AssistantReplyFormatter {
     private static final Pattern REASONING_TEXT_PATTERN = Pattern.compile("reasoning[^\\]]*?text='(.*?)'", Pattern.DOTALL);
     private static final Pattern GENERIC_TEXT_PATTERN = Pattern.compile("text='(.*?)'", Pattern.DOTALL);
     private static final Pattern CODE_BLOCK_PATTERN = Pattern.compile("```[\\s\\S]*?```", Pattern.DOTALL);
+    private static final Pattern ITEM_TRACE_PATTERN = Pattern.compile("(?s)Item[A-Za-z]+\\{.*?\\}");
+    private static final Pattern TYPE_FIELD_PATTERN = Pattern.compile("type='[^']*'");
+    private static final Pattern STATUS_FIELD_PATTERN = Pattern.compile("status='[^']*'");
+    private static final Pattern ID_FIELD_PATTERN = Pattern.compile("id='[^']*'");
+    private static final Pattern PARTIAL_FIELD_PATTERN = Pattern.compile("partial=[^,}\\]]+");
+    private static final Pattern ANNOTATIONS_FIELD_PATTERN = Pattern.compile("annotations=[^,}\\]]+");
+    private static final Pattern CONTENT_FIELD_PATTERN = Pattern.compile("content=\\[[^\\]]*\\]");
+    private static final Pattern INLINE_CODE_PATTERN = Pattern.compile("`[^`]*`");
+    private static final Pattern NEW_LINE_SPACES_PATTERN = Pattern.compile("\\s*\\n\\s*");
+    private static final Pattern MULTI_SPACE_PATTERN = Pattern.compile("[ \\t]{2,}");
+    private static final Pattern MULTI_NEWLINE_PATTERN = Pattern.compile("\\n{3,}");
 
     private AssistantReplyFormatter() {
     }
@@ -116,23 +127,23 @@ public final class AssistantReplyFormatter {
         String result = unescape(text);
 
         // 隐藏回答过程中的调用痕迹/结构化调试片段
-        result = result.replaceAll("(?s)Item[A-Za-z]+\\{.*?\\}", " ");
-        result = result.replaceAll("type='[^']*'", " ");
-        result = result.replaceAll("status='[^']*'", " ");
-        result = result.replaceAll("id='[^']*'", " ");
-        result = result.replaceAll("partial=[^,}\\]]+", " ");
-        result = result.replaceAll("annotations=[^,}\\]]+", " ");
-        result = result.replaceAll("content=\\[[^\\]]*\\]", " ");
+        result = ITEM_TRACE_PATTERN.matcher(result).replaceAll(" ");
+        result = TYPE_FIELD_PATTERN.matcher(result).replaceAll(" ");
+        result = STATUS_FIELD_PATTERN.matcher(result).replaceAll(" ");
+        result = ID_FIELD_PATTERN.matcher(result).replaceAll(" ");
+        result = PARTIAL_FIELD_PATTERN.matcher(result).replaceAll(" ");
+        result = ANNOTATIONS_FIELD_PATTERN.matcher(result).replaceAll(" ");
+        result = CONTENT_FIELD_PATTERN.matcher(result).replaceAll(" ");
         result = result.replaceAll("output_text", " ");
 
         // 隐藏代码块/命令块
         result = CODE_BLOCK_PATTERN.matcher(result).replaceAll(" ");
-        result = result.replaceAll("`[^`]*`", " ");
+        result = INLINE_CODE_PATTERN.matcher(result).replaceAll(" ");
 
         result = result.replace("\\r", "");
-        result = result.replaceAll("\\s*\\n\\s*", "\n");
-        result = result.replaceAll("[ \\t]{2,}", " ");
-        result = result.replaceAll("\\n{3,}", "\n\n");
+        result = NEW_LINE_SPACES_PATTERN.matcher(result).replaceAll("\n");
+        result = MULTI_SPACE_PATTERN.matcher(result).replaceAll(" ");
+        result = MULTI_NEWLINE_PATTERN.matcher(result).replaceAll("\n\n");
         return result.trim();
     }
 

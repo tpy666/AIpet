@@ -24,6 +24,16 @@ public class Constants {
      * 宠物列表的 SharedPreferences 键名
      */
     public static final String KEY_PET_LIST = "pet_list";
+
+    /**
+     * 当前激活宠物 ID
+     */
+    public static final String KEY_ACTIVE_PET_ID = "active_pet_id";
+
+    /**
+     * 宠物已解锁服饰列表前缀（拼接 petId）
+     */
+    public static final String KEY_UNLOCKED_OUTFITS_PREFIX = "unlocked_outfits_";
     
     // ============ API 配置键名 ============
     

@@ -2,6 +2,7 @@ package com.example.aipet.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SPUtils {
+    private static final String TAG = "SPUtils";
     private static final String SP_FILE_NAME = Constants.SP_APP_PREFS;
     private static SharedPreferences sharedPreferences;
     private static Gson gson = new Gson();
@@ -65,7 +67,7 @@ public class SPUtils {
         try {
             return gson.fromJson(json, clazz);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Failed to parse object from SharedPreferences for key: " + key, e);
             return null;
         }
     }
@@ -84,7 +86,7 @@ public class SPUtils {
             Type type = TypeToken.getParameterized(List.class, clazz).getType();
             return gson.fromJson(json, type);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Failed to parse list from SharedPreferences for key: " + key, e);
             return new ArrayList<>();
         }
     }

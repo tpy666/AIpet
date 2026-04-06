@@ -21,7 +21,7 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_PET = 1;
 
     private final List<Message> messages;
-    private final Set<Integer> expandedThinkingPositions = new HashSet<>();
+    private final Set<Long> expandedThinkingKeys = new HashSet<>();
 
     public ChatAdapter(List<Message> messages) {
         this.messages = messages;
@@ -99,29 +99,47 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
         void bind(@NonNull Message message, int position) {
+            long thinkingKey = buildThinkingKey(message, position);
             ParsedReply parsed = ParsedReply.parse(message.getContent());
             tvAnswer.setText(parsed.answer);
 
             if (parsed.hasThinking()) {
-                boolean expanded = expandedThinkingPositions.contains(position);
+                boolean expanded = expandedThinkingKeys.contains(thinkingKey);
                 tvThinkingToggle.setVisibility(View.VISIBLE);
-                tvThinkingToggle.setText(expanded ? "深度思考（收起）" : "深度思考（展开）");
+                tvThinkingToggle.setText(expanded
+                        ? itemView.getContext().getString(R.string.chat_thinking_collapse)
+                        : itemView.getContext().getString(R.string.chat_thinking_expand));
                 tvThinking.setVisibility(expanded ? View.VISIBLE : View.GONE);
                 tvThinking.setText(parsed.thinking);
 
                 tvThinkingToggle.setOnClickListener(v -> {
-                    if (expandedThinkingPositions.contains(position)) {
-                        expandedThinkingPositions.remove(position);
-                    } else {
-                        expandedThinkingPositions.add(position);
+                    int adapterPosition = getAdapterPosition();
+                    if (adapterPosition == RecyclerView.NO_POSITION) {
+                        return;
                     }
-                    notifyItemChanged(position);
+                    long currentKey = buildThinkingKey(messages.get(adapterPosition), adapterPosition);
+                    if (expandedThinkingKeys.contains(currentKey)) {
+                        expandedThinkingKeys.remove(currentKey);
+                    } else {
+                        expandedThinkingKeys.add(currentKey);
+                    }
+                    notifyItemChanged(adapterPosition);
                 });
             } else {
                 tvThinkingToggle.setVisibility(View.GONE);
                 tvThinking.setVisibility(View.GONE);
                 tvThinkingToggle.setOnClickListener(null);
             }
+        }
+
+        private long buildThinkingKey(@NonNull Message message, int position) {
+            long id = message.getId();
+            if (id > 0) {
+                return id;
+            }
+            long ts = message.getTimestamp();
+            int contentHash = message.getContent() == null ? 0 : message.getContent().hashCode();
+            return (((long) contentHash) << 32) ^ ts ^ position;
         }
     }
 
@@ -158,6 +176,22 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             if (thinkingIdx >= 0 && answerIdx < 0) {
                 String thinking = source.substring(thinkingIdx + THINKING_TITLE.length()).trim();
                 return new ParsedReply(thinking, "");
+            }
+
+            int fallbackThinking = source.indexOf("深度思考");
+            int fallbackAnswer = source.indexOf("回答");
+            if (fallbackThinking >= 0 && fallbackAnswer > fallbackThinking) {
+                String thinking = source.substring(fallbackThinking, fallbackAnswer)
+                        .replace("深度思考", "")
+                        .replace("：", "")
+                        .replace(":", "")
+                        .trim();
+                String answer = source.substring(fallbackAnswer)
+                        .replace("回答", "")
+                        .replace("：", "")
+                        .replace(":", "")
+                        .trim();
+                return new ParsedReply(thinking, answer);
             }
 
             return new ParsedReply("", source);

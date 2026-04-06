@@ -20,7 +20,7 @@
             android:id="@+id/tv_thinking_toggle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="深度思考（展开）"
+            android:text="@string/chat_thinking_expand"
             android:textColor="@color/primary"
             android:textStyle="bold"
             android:textSize="12sp"

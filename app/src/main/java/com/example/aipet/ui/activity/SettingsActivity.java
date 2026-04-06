@@ -2,6 +2,7 @@ package com.example.aipet.ui.activity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
@@ -37,10 +38,16 @@ public class SettingsActivity extends BaseActivity {
     private Button btnReset;
     private Button btnViewChatLogs;
     private Button btnViewErrorLogs;
+    private Button btnCreatePetCard;
+    private Button btnManagePetCards;
     private TextView tvStatus;
+    private TextView tvApiFoldToggle;
+    private View layoutApiFoldHeader;
+    private View layoutApiSettingsContent;
 
     private ApiSettingsStore settingsStore;
     private boolean suppressProviderChange;
+    private boolean apiSectionExpanded;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +76,15 @@ public class SettingsActivity extends BaseActivity {
             btnReset = bind(R.id.btn_reset);
             btnViewChatLogs = bind(R.id.btn_view_chat_logs);
             btnViewErrorLogs = bind(R.id.btn_view_error_logs);
+            btnCreatePetCard = bind(R.id.btn_create_pet_card);
+            btnManagePetCards = bind(R.id.btn_manage_pet_cards);
             tvStatus = bind(R.id.tv_status);
+            tvApiFoldToggle = bind(R.id.tv_api_fold_toggle);
+            layoutApiFoldHeader = bind(R.id.layout_api_fold_header);
+            layoutApiSettingsContent = bind(R.id.layout_api_settings_content);
 
             settingsStore = UtilHub.apiSettingsStore(this);
+            setApiSectionExpanded(false);
 
             // 提供方选择监听
             rgApiProvider.setOnCheckedChangeListener((group, checkedId) -> {
@@ -94,10 +107,20 @@ public class SettingsActivity extends BaseActivity {
 
             // 查看错误日志按钮
             btnViewErrorLogs.setOnClickListener(v -> viewErrorLogs());
+
+            btnCreatePetCard.setOnClickListener(v -> navigateTo(UiNavigator.toCreatePet(this)));
+            btnManagePetCards.setOnClickListener(v -> navigateTo(UiNavigator.toPetList(this)));
+            layoutApiFoldHeader.setOnClickListener(v -> setApiSectionExpanded(!apiSectionExpanded));
         } catch (Exception e) {
             Log.e("SettingsActivity", "Error in initViews", e);
             Toast.makeText(this, "初始化控件失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void setApiSectionExpanded(boolean expanded) {
+        apiSectionExpanded = expanded;
+        layoutApiSettingsContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        tvApiFoldToggle.setText(expanded ? "收起" : "展开");
     }
 
     /**

@@ -1,8 +1,18 @@
 package com.example.aipet.network.request;
 
 import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.example.aipet.network.ApiClient;
+import com.example.aipet.network.ChatResponse;
+
+import java.util.Locale;
+import java.util.function.Consumer;
+
+import okhttp3.ResponseBody;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -16,11 +26,12 @@ import retrofit2.Response;
 public class NetworkRequestExecutor {
     
     private static final String TAG = "NetworkRequest";
+    private static final int DEFAULT_ERROR_SNIPPET_LENGTH = 100;
 
     private static String readErrorBody(@NonNull Response<?> response) {
-        try {
-            if (response.errorBody() != null) {
-                return response.errorBody().string();
+        try (ResponseBody errorBody = response.errorBody()) {
+            if (errorBody != null) {
+                return errorBody.string();
             }
         } catch (Exception e) {
             return e.getMessage() != null ? e.getMessage() : "";
@@ -35,18 +46,18 @@ public class NetworkRequestExecutor {
         return throwable.getMessage();
     }
 
-    private static String abbreviate(@Nullable String content, int maxLength) {
+    private static String abbreviate(@Nullable String content) {
         if (content == null || content.isEmpty()) {
             return "";
         }
-        return content.substring(0, Math.min(maxLength, content.length()));
+        return content.substring(0, Math.min(DEFAULT_ERROR_SNIPPET_LENGTH, content.length()));
     }
 
     private static String buildHttpError(int statusCode, @Nullable String errorBody) {
-        String shortBody = abbreviate(errorBody, 100);
+        String shortBody = abbreviate(errorBody);
         return shortBody.isEmpty()
-                ? String.format("HTTP %d", statusCode)
-                : String.format("HTTP %d: %s", statusCode, shortBody);
+                ? String.format(Locale.ROOT, "HTTP %d", statusCode)
+                : String.format(Locale.ROOT, "HTTP %d: %s", statusCode, shortBody);
     }
     
     /**
@@ -182,17 +193,17 @@ public class NetworkRequestExecutor {
      * @param logger 日志器
      */
     public static void executeChatRequest(
-            @NonNull retrofit2.Call<com.example.aipet.network.ChatResponse> call,
-            @Nullable com.example.aipet.network.ApiClient.ChatCallback callback,
+            @NonNull Call<ChatResponse> call,
+            @Nullable ApiClient.ChatCallback callback,
             @NonNull String apiName,
-            @NonNull java.util.function.Consumer<String> logger) {
+            @NonNull Consumer<String> logger) {
         
-        call.enqueue(new Callback<com.example.aipet.network.ChatResponse>() {
+        call.enqueue(new Callback<ChatResponse>() {
             @Override
-            public void onResponse(@NonNull retrofit2.Call<com.example.aipet.network.ChatResponse> call,
-                                 @NonNull Response<com.example.aipet.network.ChatResponse> response) {
+            public void onResponse(@NonNull Call<ChatResponse> call,
+                                 @NonNull Response<ChatResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    com.example.aipet.network.ChatResponse chatResponse = response.body();
+                    ChatResponse chatResponse = response.body();
                     String reply = chatResponse.getReplyContent();
                     
                     if (reply != null && !reply.isEmpty()) {
@@ -220,7 +231,7 @@ public class NetworkRequestExecutor {
             }
 
             @Override
-            public void onFailure(@NonNull retrofit2.Call<com.example.aipet.network.ChatResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ChatResponse> call, @NonNull Throwable t) {
                 String errorMessage = safeMessage(t, "未知网络错误");
                 logger.accept(apiName + " 请求异常: " + errorMessage);
                 
@@ -241,16 +252,16 @@ public class NetworkRequestExecutor {
      * @param logger 日志器
      */
     public static void executeFullResponse(
-            @NonNull retrofit2.Call<com.example.aipet.network.ChatResponse> call,
-            @Nullable com.example.aipet.network.ApiClient.ChatResponseCallback callback,
-            @NonNull java.util.function.Consumer<String> logger) {
+            @NonNull Call<ChatResponse> call,
+            @Nullable ApiClient.ChatResponseCallback callback,
+            @NonNull Consumer<String> logger) {
         
-        call.enqueue(new Callback<com.example.aipet.network.ChatResponse>() {
+        call.enqueue(new Callback<ChatResponse>() {
             @Override
-            public void onResponse(@NonNull retrofit2.Call<com.example.aipet.network.ChatResponse> call,
-                                 @NonNull Response<com.example.aipet.network.ChatResponse> response) {
+            public void onResponse(@NonNull Call<ChatResponse> call,
+                                 @NonNull Response<ChatResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    com.example.aipet.network.ChatResponse chatResponse = response.body();
+                    ChatResponse chatResponse = response.body();
                     logger.accept("完整响应成功: Tokens=" + chatResponse.getTotalTokens());
                     
                     if (callback != null) {
@@ -269,7 +280,7 @@ public class NetworkRequestExecutor {
             }
 
             @Override
-            public void onFailure(@NonNull retrofit2.Call<com.example.aipet.network.ChatResponse> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ChatResponse> call, @NonNull Throwable t) {
                 String errorMessage = safeMessage(t, "网络请求失败");
                 logger.accept("完整响应请求异常: " + errorMessage);
                 

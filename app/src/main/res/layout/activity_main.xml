@@ -1,89 +1,458 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/main"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_screen_atmosphere"
-    android:fillViewport="true">
+    android:padding="@dimen/home_screen_padding">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/layout_top_info"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:elevation="12dp"
         android:orientation="vertical"
-        android:padding="20dp">
+        app:layout_constraintEnd_toStartOf="@+id/layout_side_actions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_home_time_chip"
+            android:paddingLeft="14dp"
+            android:paddingTop="8dp"
+            android:paddingRight="14dp"
+            android:paddingBottom="8dp"
+            android:text="@string/home_time_placeholder"
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_meta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_home_meta_chip"
+            android:paddingLeft="14dp"
+            android:paddingTop="8dp"
+            android:paddingRight="14dp"
+            android:paddingBottom="8dp"
+            android:text="@string/home_meta_placeholder"
+            android:textColor="@android:color/white"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_pet_switcher"
+        android:layout_width="152dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_home_recent_panel"
+        android:elevation="16dp"
+        android:orientation="vertical"
+        android:padding="6dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="20dp"
-            android:background="@drawable/bg_surface_card"
-            android:elevation="2dp"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
-                android:layout_width="match_parent"
+                android:id="@+id/tv_current_pet_chip"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="AI 宠物助手"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/home_current_pet_none"
                 android:textColor="@color/ui_title"
-                android:textSize="30sp"
+                android:textSize="12sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="创建角色、对话陪伴、管理日志，一站式完成。"
-                android:textColor="@color/ui_soft_text"
-                android:textSize="14sp" />
+            <ImageButton
+                android:id="@+id/btn_pet_switch_expand"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_home_side_circle"
+                android:contentDescription="@string/home_cd_pet_switch_toggle"
+                android:padding="6dp"
+                android:src="@drawable/ic_home_icon_placeholder_round"
+                app:tint="@null"
+                app:srcCompat="@drawable/ic_home_icon_placeholder_round" />
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btn_create_pet"
+        <LinearLayout
+            android:id="@+id/layout_pet_switch_list"
             android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/bg_button_primary"
-            android:text="创建新角色"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btn_pet_list"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/bg_button_secondary"
-            android:text="查看我的角色"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btn_chat"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/bg_button_primary"
-            android:text="开始聊天"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btn_settings"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:background="@drawable/bg_button_secondary"
-            android:text="设置与日志"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="vertical"
+            android:visibility="gone" />
     </LinearLayout>
-</ScrollView>
+
+    <LinearLayout
+        android:id="@+id/layout_side_actions"
+        android:layout_width="@dimen/home_side_column_width"
+        android:layout_height="wrap_content"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@+id/card_pet_stage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/card_pet_stage">
+
+        <ImageButton
+            android:id="@+id/btn_affection"
+            android:layout_width="@dimen/home_side_button_size"
+            android:layout_height="@dimen/home_side_button_size"
+            android:background="@drawable/bg_home_side_circle"
+            android:contentDescription="@string/home_cd_affection"
+            android:padding="@dimen/home_margin_xl"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_home_icon_placeholder_round"
+            app:tint="@null"
+            app:srcCompat="@drawable/ic_home_icon_placeholder_round" />
+
+        <ImageButton
+            android:id="@+id/btn_logs"
+            android:layout_width="@dimen/home_side_button_size"
+            android:layout_height="@dimen/home_side_button_size"
+            android:layout_marginTop="@dimen/home_margin_xl"
+            android:background="@drawable/bg_home_side_circle"
+            android:contentDescription="@string/home_cd_logs"
+            android:padding="14dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_home_icon_placeholder_round"
+            app:tint="@null"
+            app:srcCompat="@drawable/ic_home_icon_placeholder_round" />
+
+        <ImageButton
+            android:id="@+id/btn_dress_up"
+            android:layout_width="@dimen/home_side_button_size"
+            android:layout_height="@dimen/home_side_button_size"
+            android:layout_marginTop="@dimen/home_margin_xl"
+            android:background="@drawable/bg_home_side_circle"
+            android:contentDescription="@string/home_cd_dress_up"
+            android:padding="14dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_home_icon_placeholder_round"
+            app:tint="@null"
+            app:srcCompat="@drawable/ic_home_icon_placeholder_round" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/card_pet_stage"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="72dp"
+        android:layout_marginEnd="@dimen/home_margin_md"
+        android:layout_marginBottom="86dp"
+        android:background="@drawable/bg_home_pet_stage"
+        android:clipToOutline="true"
+        android:elevation="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/layout_side_actions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_pet_avatar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/home_cd_pet_avatar"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_pet_avatar_placeholder" />
+
+        <TextView
+            android:id="@+id/tv_pet_avatar_placeholder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_home_meta_chip"
+            android:paddingLeft="12dp"
+            android:paddingTop="6dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="6dp"
+            android:text="@string/home_pet_avatar_placeholder_hint"
+            android:textColor="@android:color/white"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tv_pet_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_home_meta_chip"
+            android:paddingLeft="12dp"
+            android:paddingTop="6dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="6dp"
+            android:text="@string/home_pet_name_placeholder"
+            android:textColor="@android:color/white"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_bottom_nav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/home_margin_lg"
+        android:elevation="12dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/layout_recent_chat_panel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/nav_help"
+            style="@style/HomeNavButton"
+            android:layout_marginEnd="@dimen/home_margin_sm"
+            android:layout_weight="1"
+            app:drawableTopCompat="@drawable/ic_home_icon_placeholder"
+            android:drawablePadding="6dp"
+            android:text="@string/home_nav_help" />
+
+        <TextView
+            android:id="@+id/nav_feed"
+            style="@style/HomeNavButton"
+            android:layout_marginEnd="@dimen/home_margin_sm"
+            android:layout_weight="1"
+            app:drawableTopCompat="@drawable/ic_home_icon_placeholder"
+            android:drawablePadding="6dp"
+            android:text="@string/home_nav_feed" />
+
+        <TextView
+            android:id="@+id/nav_store"
+            style="@style/HomeNavButton"
+            android:layout_marginEnd="@dimen/home_margin_sm"
+            android:layout_weight="1"
+            app:drawableTopCompat="@drawable/ic_home_icon_placeholder"
+            android:drawablePadding="6dp"
+            android:text="@string/home_nav_store" />
+
+        <TextView
+            android:id="@+id/nav_outing"
+            style="@style/HomeNavButton"
+            android:layout_marginEnd="@dimen/home_margin_sm"
+            android:layout_weight="1"
+            app:drawableTopCompat="@drawable/ic_home_icon_placeholder"
+            android:drawablePadding="6dp"
+            android:text="@string/home_nav_outing" />
+
+        <TextView
+            android:id="@+id/nav_settings"
+            style="@style/HomeNavButton"
+            android:layout_weight="1"
+            app:drawableTopCompat="@drawable/ic_home_icon_placeholder"
+            android:drawablePadding="6dp"
+            android:text="@string/home_nav_settings" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_recent_chat_panel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/home_margin_sm"
+        android:layout_marginBottom="@dimen/home_margin_sm"
+        android:background="@drawable/bg_home_recent_panel"
+        android:elevation="14dp"
+        android:orientation="vertical"
+        android:padding="@dimen/home_padding_lg"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/layout_chat_input"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/home_recent_title"
+                android:textColor="@color/ui_title"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btn_recent_fullscreen"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:background="@drawable/bg_home_side_circle"
+                android:contentDescription="@string/home_cd_recent_fullscreen"
+                android:padding="8dp"
+                android:src="@drawable/ic_home_icon_placeholder_round"
+                app:tint="@null"
+                app:srcCompat="@drawable/ic_home_icon_placeholder_round" />
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/sv_recent_chat"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_marginTop="6dp"
+            android:fillViewport="true"
+            android:scrollbars="vertical">
+
+            <LinearLayout
+                android:id="@+id/layout_recent_bubbles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="2dp" />
+        </ScrollView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_chat_input"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/home_chat_bar_height"
+        android:background="@drawable/bg_home_recent_panel"
+        android:elevation="14dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/home_padding_md"
+        android:paddingRight="@dimen/home_padding_md"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageButton
+            android:id="@+id/btn_recent_toggle"
+            android:layout_width="@dimen/home_chat_action_size"
+            android:layout_height="@dimen/home_chat_action_size"
+            android:background="@drawable/bg_home_side_circle"
+            android:contentDescription="@string/home_cd_recent_toggle"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_home_icon_placeholder_round"
+            app:tint="@null"
+            app:srcCompat="@drawable/ic_home_icon_placeholder_round" />
+
+        <EditText
+            android:id="@+id/et_home_input"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/home_input_height"
+            android:layout_marginStart="@dimen/home_margin_sm"
+            android:layout_marginEnd="@dimen/home_margin_sm"
+            android:layout_weight="1"
+            android:autofillHints="message"
+            android:background="@drawable/bg_home_input_field"
+            android:hint="@string/home_hint_chat_input"
+            android:inputType="textCapSentences|textMultiLine"
+            android:imeOptions="actionSend"
+            android:maxLines="3"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:minLines="1"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_hint" />
+
+        <ImageButton
+            android:id="@+id/btn_home_send"
+            android:layout_width="@dimen/home_chat_action_size"
+            android:layout_height="@dimen/home_chat_action_size"
+            android:background="@drawable/bg_home_send_circle"
+            android:contentDescription="@string/home_cd_send"
+            android:padding="10dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_home_icon_placeholder_round"
+            app:tint="@null"
+            app:srcCompat="@drawable/ic_home_icon_placeholder_round" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_top_reply_bubbles"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="96dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:elevation="26dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toStartOf="@+id/layout_side_actions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/layout_recent_fullscreen"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#A6000000"
+        android:clickable="true"
+        android:elevation="20dp"
+        android:focusable="true"
+        android:padding="12dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_home_recent_panel"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/home_recent_fullscreen_title"
+                    android:textColor="@color/ui_title"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/btn_recent_fullscreen_close"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_home_side_circle"
+                    android:contentDescription="@string/home_cd_recent_close"
+                    android:padding="10dp"
+                    android:src="@drawable/ic_home_icon_placeholder_round"
+                    app:tint="@null"
+                    app:srcCompat="@drawable/ic_home_icon_placeholder_round" />
+            </LinearLayout>
+
+            <ScrollView
+                android:id="@+id/sv_recent_chat_fullscreen"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:fillViewport="true"
+                android:scrollbars="vertical">
+
+                <LinearLayout
+                    android:id="@+id/layout_recent_bubbles_full"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="6dp" />
+            </ScrollView>
+        </LinearLayout>
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

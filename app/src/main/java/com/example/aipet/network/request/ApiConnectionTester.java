@@ -39,6 +39,7 @@ import okhttp3.Response;
 public final class ApiConnectionTester {
 
     private static final String TAG = "ApiConnectionTester";
+    private static final int DEFAULT_ERROR_SNIPPET_LENGTH = 120;
     private static final MediaType JSON_TYPE = MediaType.get("application/json; charset=utf-8");
     private static final Gson GSON = new GsonBuilder().create();
 
@@ -149,7 +150,7 @@ public final class ApiConnectionTester {
             }
 
             String output = response.getOutput().toString();
-            if (output == null || output.trim().isEmpty()) {
+            if (output.trim().isEmpty()) {
                 callback.onFailure("连接失败: 豆包返回无有效回复");
                 return;
             }
@@ -441,7 +442,7 @@ public final class ApiConnectionTester {
         if (trimmedBody.isEmpty()) {
             return "连接失败: HTTP " + code;
         }
-        return "连接失败: HTTP " + code + " (" + abbreviate(trimmedBody, 120) + ")";
+        return "连接失败: HTTP " + code + " (" + abbreviate(trimmedBody) + ")";
     }
 
     private static String buildEmptyResponseMessage(@NonNull ApiConfig.ApiProvider provider, int code) {
@@ -464,8 +465,8 @@ public final class ApiConnectionTester {
         return url + "/";
     }
 
-    private static String abbreviate(@NonNull String value, int maxLength) {
-        return value.substring(0, Math.min(maxLength, value.length()));
+    private static String abbreviate(@NonNull String value) {
+        return value.substring(0, Math.min(DEFAULT_ERROR_SNIPPET_LENGTH, value.length()));
     }
 
     private static String safeMessage(@Nullable Throwable throwable) {
