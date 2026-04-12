@@ -1,48 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_screen_atmosphere">
+    android:background="@drawable/bg_screen_atmosphere"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:padding="16dp">
 
-        <!-- 标题 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="API 配置"
-            android:textSize="24sp"
-            android:textStyle="bold"
+            android:layout_marginBottom="16dp"
+            android:text="@string/settings_title"
             android:textColor="@color/ui_title"
-            android:layout_marginBottom="24dp" />
-
-        <Button
-            android:id="@+id/btn_create_pet_card"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/bg_button_primary"
-            android:text="➕ 创建角色卡"
-            android:textColor="@android:color/white"
-            android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/btn_manage_pet_cards"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="18dp"
-            android:background="@drawable/bg_button_secondary"
-            android:text="🗂 选择/删除角色卡"
-            android:textColor="@android:color/white"
-            android:textSize="15sp" />
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
         <LinearLayout
-            android:id="@+id/layout_api_fold_header"
+            android:id="@+id/layout_role_card_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_home_recent_panel"
@@ -54,239 +33,430 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="API 设置"
+                android:text="@string/settings_role_card_section"
                 android:textColor="@color/ui_title"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/tv_api_fold_toggle"
+                android:id="@+id/tv_role_card_toggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="展开"
+                android:text="@string/settings_expand"
                 android:textColor="@color/primary"
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/layout_api_settings_content"
+            android:id="@+id/layout_role_card_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             android:orientation="vertical"
+            android:padding="12dp"
             android:visibility="gone">
 
-        <!-- API 提供方选择 -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="选择 API 提供方"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="12dp"
-            android:textColor="@android:color/darker_gray" />
-
-        <RadioGroup
-            android:id="@+id/rg_api_provider"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp">
-
-            <RadioButton
-                android:id="@+id/rb_openai"
+            <Button
+                android:id="@+id/btn_create_pet_card"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="OpenAI (GPT-3.5/GPT-4)"
-                android:textSize="14sp"
-                android:paddingVertical="12dp" />
+                android:layout_height="48dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/bg_button_primary"
+                android:text="@string/settings_create_card"
+                android:textColor="@android:color/white"
+                android:textSize="15sp" />
 
-            <RadioButton
-                android:id="@+id/rb_doubao"
+            <Button
+                android:id="@+id/btn_manage_pet_cards"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="豆包 (ByteDance Doubao) - 多模态支持"
-                android:textSize="14sp"
-                android:paddingVertical="12dp" />
+                android:layout_height="48dp"
+                android:background="@drawable/bg_button_secondary"
+                android:text="@string/settings_manage_card"
+                android:textColor="@android:color/white"
+                android:textSize="15sp" />
+        </LinearLayout>
 
-            <RadioButton
-                android:id="@+id/rb_local"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="本地后端"
-                android:textSize="14sp"
-                android:paddingVertical="12dp" />
-
-            <RadioButton
-                android:id="@+id/rb_custom"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="自定义 API"
-                android:textSize="14sp"
-                android:paddingVertical="12dp" />
-
-        </RadioGroup>
-
-        <!-- API URL 输入框 -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="API 端点 URL"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:textColor="@android:color/darker_gray" />
-
-        <EditText
-            android:id="@+id/et_api_url"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:hint="本地: http://10.0.2.2:8080 | OpenAI: https://api.openai.com/v1"
-            android:padding="12dp"
-            android:inputType="text|textUri"
-            android:background="@drawable/edit_text_background"
-            android:textSize="14sp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- API Key 输入框 -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="API 密钥"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:textColor="@android:color/darker_gray" />
-
-        <EditText
-            android:id="@+id/et_api_key"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:hint="sk-..."
-            android:padding="12dp"
-            android:inputType="textPassword"
-            android:background="@drawable/edit_text_background"
-            android:textSize="14sp"
-            android:layout_marginBottom="16dp" />
-
-        <!-- 模型名称输入框 -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="模型名称"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"
-            android:textColor="@android:color/darker_gray" />
-
-        <EditText
-            android:id="@+id/et_model_name"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:hint="gpt-3.5-turbo"
-            android:padding="12dp"
-            android:inputType="text"
-            android:background="@drawable/edit_text_background"
-            android:textSize="14sp"
-            android:layout_marginBottom="24dp" />
-
-        <!-- 状态显示 -->
-        <TextView
-            android:id="@+id/tv_status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="状态：未配置"
-            android:textSize="12sp"
-            android:padding="12dp"
-            android:background="@drawable/status_background"
-            android:layout_marginBottom="24dp"
-            android:textColor="@color/secondary_variant" />
-
-        <!-- 按钮容器 -->
         <LinearLayout
+            android:id="@+id/layout_image_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:background="@drawable/bg_home_recent_panel"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp">
 
-            <!-- 保存按钮 -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/settings_image_section"
+                android:textColor="@color/ui_title"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_image_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_expand"
+                android:textColor="@color/primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_image_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="@string/settings_avatar_url"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/et_avatar_image_url"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="https://example.com/avatar.png"
+                android:inputType="textUri"
+                android:padding="12dp"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="@string/settings_avatar_upload_endpoint"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/et_avatar_upload_endpoint"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="https://your-server.com/api/avatar/upload"
+                android:inputType="textUri"
+                android:padding="12dp"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="@string/settings_avatar_remove_bg_endpoint"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/et_avatar_remove_bg_endpoint"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="https://your-server.com/api/avatar/remove-bg"
+                android:inputType="textUri"
+                android:padding="12dp"
+                android:textSize="14sp" />
+
+            <CheckBox
+                android:id="@+id/cb_avatar_auto_process"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="@string/settings_avatar_auto_process"
+                android:textColor="@color/ui_title"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btn_apply_avatar"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/bg_button_primary"
+                android:text="@string/settings_avatar_apply"
+                android:textColor="@android:color/white"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tv_avatar_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/status_background"
+                android:padding="12dp"
+                android:text="图片设置已就绪"
+                android:textColor="@color/secondary_variant"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_api_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_home_recent_panel"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/settings_api_section"
+                android:textColor="@color/ui_title"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_api_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_expand"
+                android:textColor="@color/primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_api_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
+                android:text="@string/settings_select_api_provider"
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rg_api_provider"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <RadioButton
+                    android:id="@+id/rb_openai"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="10dp"
+                    android:text="OpenAI (GPT-3.5/GPT-4)"
+                    android:textSize="14sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_doubao"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="10dp"
+                    android:text="豆包 (ByteDance Doubao) - 多模态支持"
+                    android:textSize="14sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_local"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="10dp"
+                    android:text="本地后端"
+                    android:textSize="14sp" />
+
+                <RadioButton
+                    android:id="@+id/rb_custom"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingVertical="10dp"
+                    android:text="自定义 API"
+                    android:textSize="14sp" />
+            </RadioGroup>
+
+            <EditText
+                android:id="@+id/et_api_url"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="@string/settings_api_url"
+                android:inputType="textUri"
+                android:padding="12dp"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_api_key"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="@string/settings_api_key"
+                android:inputType="textPassword"
+                android:padding="12dp"
+                android:textSize="14sp" />
+
+            <EditText
+                android:id="@+id/et_model_name"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/edit_text_background"
+                android:hint="@string/settings_model_name"
+                android:inputType="text"
+                android:padding="12dp"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/status_background"
+                android:padding="12dp"
+                android:text="状态：未配置"
+                android:textColor="@color/secondary_variant"
+                android:textSize="12sp" />
+
             <Button
                 android:id="@+id/btn_save"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="💾 保存设置"
-                android:textSize="16sp"
-                android:textStyle="bold"
+                android:layout_marginBottom="10dp"
                 android:background="@drawable/bg_button_primary"
+                android:text="@string/settings_save"
                 android:textColor="@android:color/white"
-                android:layout_marginBottom="12dp" />
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-            <!-- 测试连接按钮 -->
             <Button
                 android:id="@+id/btn_test"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="🔗 测试连接"
-                android:textSize="16sp"
+                android:layout_marginBottom="10dp"
                 android:background="@drawable/bg_button_secondary"
+                android:text="@string/settings_test"
                 android:textColor="@android:color/white"
-                android:layout_marginBottom="12dp" />
+                android:textSize="15sp" />
 
-            <!-- 重置按钮 -->
             <Button
                 android:id="@+id/btn_reset"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="🔄 重置默认"
-                android:textSize="16sp"
                 android:background="@drawable/bg_button_secondary"
+                android:text="@string/settings_reset"
                 android:textColor="@android:color/white"
-                android:layout_marginBottom="20dp" />
+                android:textSize="15sp" />
+        </LinearLayout>
 
-            <!-- 日志部分标题 -->
+        <LinearLayout
+            android:id="@+id/layout_log_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_home_recent_panel"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="日志管理"
+                android:layout_weight="1"
+                android:text="@string/settings_log_section"
+                android:textColor="@color/ui_title"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginBottom="12dp" />
+                android:textStyle="bold" />
 
-            <!-- 查看聊天日志按钮 -->
+            <TextView
+                android:id="@+id/tv_log_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/settings_expand"
+                android:textColor="@color/primary"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_log_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:visibility="gone">
+
             <Button
                 android:id="@+id/btn_view_chat_logs"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="📝 查看聊天日志"
-                android:textSize="14sp"
+                android:layout_marginBottom="10dp"
                 android:background="@drawable/bg_button_primary"
+                android:text="@string/settings_view_chat_logs"
                 android:textColor="@android:color/white"
-                android:layout_marginBottom="12dp" />
+                android:textSize="14sp" />
 
-            <!-- 查看错误日志按钮 -->
             <Button
                 android:id="@+id/btn_view_error_logs"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="🚨 查看 API 错误日志"
-                android:textSize="14sp"
                 android:background="@drawable/bg_button_secondary"
-                android:textColor="@android:color/white" />
-
+                android:text="@string/settings_view_error_logs"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_help_page"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_primary"
+                android:text="@string/settings_help_short"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btn_dress_up_page"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_secondary"
+                android:text="@string/settings_dress_up_short"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
         </LinearLayout>
 
-        <!-- 帮助提示 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📌 提示：\n• OpenAI: 访问 https://platform.openai.com 获取 API Key\n• 本地: 确保后端服务运行在指定地址\n• 自定义: 支持任何兼容 OpenAI 的 API"
-            android:textSize="12sp"
-            android:padding="12dp"
+            android:layout_marginTop="14dp"
             android:background="@drawable/help_background"
-            android:layout_marginTop="24dp"
-            android:textColor="@android:color/darker_gray" />
-
+            android:padding="12dp"
+            android:text="@string/settings_api_hint"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="12sp" />
     </LinearLayout>
-
 </ScrollView>

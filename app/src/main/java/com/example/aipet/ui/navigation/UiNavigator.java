@@ -11,8 +11,14 @@ import com.example.aipet.ui.activity.ChatLogViewerActivity;
 import com.example.aipet.ui.activity.CreatePetActivity;
 import com.example.aipet.ui.activity.ErrorLogViewerActivity;
 import com.example.aipet.ui.activity.MainActivity;
+import com.example.aipet.ui.activity.AffectionActivity;
 import com.example.aipet.ui.activity.PetCardListActivity;
+import com.example.aipet.ui.activity.HelpActivity;
+import com.example.aipet.ui.activity.DressUpActivity;
 import com.example.aipet.ui.activity.SettingsActivity;
+import com.example.aipet.ui.activity.FeedActivity;
+import com.example.aipet.ui.activity.OutingActivity;
+import com.example.aipet.ui.activity.StoreActivity;
 
 /**
  * UI 导航总引导
@@ -52,11 +58,41 @@ public final class UiNavigator {
         return new Intent(context, SettingsActivity.class);
     }
 
+    public static Intent toSettings(@NonNull Context context, @NonNull String section) {
+        Intent intent = new Intent(context, SettingsActivity.class);
+        intent.putExtra(SettingsActivity.EXTRA_OPEN_SECTION, section);
+        return intent;
+    }
+
+    public static Intent toHelp(@NonNull Context context) {
+        return new Intent(context, HelpActivity.class);
+    }
+
+    public static Intent toDressUp(@NonNull Context context) {
+        return new Intent(context, DressUpActivity.class);
+    }
+
     public static Intent toChatLogs(@NonNull Context context) {
         return new Intent(context, ChatLogViewerActivity.class);
     }
 
     public static Intent toErrorLogs(@NonNull Context context) {
         return new Intent(context, ErrorLogViewerActivity.class);
+    }
+
+    public static Intent toStore(@NonNull Context context) {
+        return new Intent(context, StoreActivity.class);
+    }
+
+    public static Intent toFeed(@NonNull Context context) {
+        return new Intent(context, FeedActivity.class);
+    }
+
+    public static Intent toOuting(@NonNull Context context) {
+        return new Intent(context, OutingActivity.class);
+    }
+
+    public static Intent toAffection(@NonNull Context context) {
+        return new Intent(context, AffectionActivity.class);
     }
 }

@@ -1,38 +1,55 @@
 package com.example.aipet.ui.activity;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.example.aipet.R;
+import com.example.aipet.data.model.Pet;
 import com.example.aipet.network.ApiClient;
 import com.example.aipet.network.ApiConfig;
+import com.example.aipet.network.request.ApiConnectionTester;
+import com.example.aipet.ui.avatar.AvatarImagePipeline;
 import com.example.aipet.ui.navigation.UiNavigator;
 import com.example.aipet.util.Constants;
+import com.example.aipet.util.SPUtils;
 import com.example.aipet.util.UtilHub;
-import com.example.aipet.network.request.ApiConnectionTester;
 import com.example.aipet.util.store.ApiSettingsStore;
+import com.example.aipet.util.store.PetStore;
+
+import java.util.List;
 
 /**
- * 设置页面 - 配置 API 端点和密钥
- * 支持多种 API 提供商配置
+ * 设置页面：API、图片、角色卡和日志均以折叠区展示。
  */
 public class SettingsActivity extends BaseActivity {
 
     private static final String TAG = "SettingsActivity";
+    public static final String EXTRA_OPEN_SECTION = "extra_open_section";
+    private static final String SECTION_ROLE = "role";
+    private static final String SECTION_IMAGE = "image";
+    private static final String SECTION_API = "api";
+    private static final String SECTION_LOG = "log";
 
     private RadioGroup rgApiProvider;
     private EditText etApiUrl;
     private EditText etApiKey;
     private EditText etModelName;
+    private EditText etAvatarImageUrl;
+    private EditText etAvatarUploadEndpoint;
+    private EditText etAvatarRemoveBgEndpoint;
+    private CheckBox cbAvatarAutoProcess;
     private Button btnSave;
     private Button btnTest;
     private Button btnReset;
@@ -40,164 +57,190 @@ public class SettingsActivity extends BaseActivity {
     private Button btnViewErrorLogs;
     private Button btnCreatePetCard;
     private Button btnManagePetCards;
+    private Button btnApplyAvatar;
+    private Button btnHelpPage;
+    private Button btnDressUpPage;
     private TextView tvStatus;
+    private TextView tvAvatarStatus;
     private TextView tvApiFoldToggle;
-    private View layoutApiFoldHeader;
-    private View layoutApiSettingsContent;
+    private TextView tvRoleFoldToggle;
+    private TextView tvImageFoldToggle;
+    private TextView tvLogFoldToggle;
+    private View layoutRoleHeader;
+    private View layoutRoleContent;
+    private View layoutImageHeader;
+    private View layoutImageContent;
+    private View layoutApiHeader;
+    private View layoutApiContent;
+    private View layoutLogHeader;
+    private View layoutLogContent;
 
     private ApiSettingsStore settingsStore;
+    private PetStore petStore;
     private boolean suppressProviderChange;
-    private boolean apiSectionExpanded;
+    private boolean roleExpanded;
+    private boolean imageExpanded;
+    private boolean apiExpanded;
+    private boolean logExpanded;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        try {
-            setContentView(R.layout.activity_settings);
-            setupScreen("API 设置", true);
+        setContentView(R.layout.activity_settings);
+        setupScreen(getString(R.string.settings_title), true);
 
-            initViews();
-            loadSettings();
-        } catch (Exception e) {
-            Log.e("SettingsActivity", "Error in onCreate", e);
-            Toast.makeText(this, "初始化设置页面失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
-            finish();
-        }
+        settingsStore = UtilHub.apiSettingsStore(this);
+        petStore = UtilHub.petStore(this);
+        initViews();
+        loadSettings();
+        openRequestedSection();
     }
 
     private void initViews() {
-        try {
-            rgApiProvider = bind(R.id.rg_api_provider);
-            etApiUrl = bind(R.id.et_api_url);
-            etApiKey = bind(R.id.et_api_key);
-            etModelName = bind(R.id.et_model_name);
-            btnSave = bind(R.id.btn_save);
-            btnTest = bind(R.id.btn_test);
-            btnReset = bind(R.id.btn_reset);
-            btnViewChatLogs = bind(R.id.btn_view_chat_logs);
-            btnViewErrorLogs = bind(R.id.btn_view_error_logs);
-            btnCreatePetCard = bind(R.id.btn_create_pet_card);
-            btnManagePetCards = bind(R.id.btn_manage_pet_cards);
-            tvStatus = bind(R.id.tv_status);
-            tvApiFoldToggle = bind(R.id.tv_api_fold_toggle);
-            layoutApiFoldHeader = bind(R.id.layout_api_fold_header);
-            layoutApiSettingsContent = bind(R.id.layout_api_settings_content);
+        rgApiProvider = bind(R.id.rg_api_provider);
+        etApiUrl = bind(R.id.et_api_url);
+        etApiKey = bind(R.id.et_api_key);
+        etModelName = bind(R.id.et_model_name);
+        etAvatarImageUrl = bind(R.id.et_avatar_image_url);
+        etAvatarUploadEndpoint = bind(R.id.et_avatar_upload_endpoint);
+        etAvatarRemoveBgEndpoint = bind(R.id.et_avatar_remove_bg_endpoint);
+        cbAvatarAutoProcess = bind(R.id.cb_avatar_auto_process);
+        btnSave = bind(R.id.btn_save);
+        btnTest = bind(R.id.btn_test);
+        btnReset = bind(R.id.btn_reset);
+        btnViewChatLogs = bind(R.id.btn_view_chat_logs);
+        btnViewErrorLogs = bind(R.id.btn_view_error_logs);
+        btnCreatePetCard = bind(R.id.btn_create_pet_card);
+        btnManagePetCards = bind(R.id.btn_manage_pet_cards);
+        btnApplyAvatar = bind(R.id.btn_apply_avatar);
+        btnHelpPage = bind(R.id.btn_help_page);
+        btnDressUpPage = bind(R.id.btn_dress_up_page);
+        tvStatus = bind(R.id.tv_status);
+        tvAvatarStatus = bind(R.id.tv_avatar_status);
+        tvRoleFoldToggle = bind(R.id.tv_role_card_toggle);
+        tvImageFoldToggle = bind(R.id.tv_image_toggle);
+        tvApiFoldToggle = bind(R.id.tv_api_toggle);
+        tvLogFoldToggle = bind(R.id.tv_log_toggle);
+        layoutRoleHeader = bind(R.id.layout_role_card_header);
+        layoutRoleContent = bind(R.id.layout_role_card_content);
+        layoutImageHeader = bind(R.id.layout_image_header);
+        layoutImageContent = bind(R.id.layout_image_content);
+        layoutApiHeader = bind(R.id.layout_api_header);
+        layoutApiContent = bind(R.id.layout_api_content);
+        layoutLogHeader = bind(R.id.layout_log_header);
+        layoutLogContent = bind(R.id.layout_log_content);
 
-            settingsStore = UtilHub.apiSettingsStore(this);
-            setApiSectionExpanded(false);
+        layoutRoleHeader.setOnClickListener(v -> setSectionExpanded(SECTION_ROLE, !roleExpanded));
+        layoutImageHeader.setOnClickListener(v -> setSectionExpanded(SECTION_IMAGE, !imageExpanded));
+        layoutApiHeader.setOnClickListener(v -> setSectionExpanded(SECTION_API, !apiExpanded));
+        layoutLogHeader.setOnClickListener(v -> setSectionExpanded(SECTION_LOG, !logExpanded));
 
-            // 提供方选择监听
-            rgApiProvider.setOnCheckedChangeListener((group, checkedId) -> {
-                if (!suppressProviderChange) {
-                    onProviderChanged(checkedId, true);
-                }
-            });
+        rgApiProvider.setOnCheckedChangeListener((group, checkedId) -> {
+            if (!suppressProviderChange) {
+                onProviderChanged(checkedId, true);
+            }
+        });
 
-            // 保存按钮
-            btnSave.setOnClickListener(v -> saveSettings());
+        btnCreatePetCard.setOnClickListener(v -> navigateTo(UiNavigator.toCreatePet(this)));
+        btnManagePetCards.setOnClickListener(v -> navigateTo(UiNavigator.toPetList(this)));
+        btnHelpPage.setOnClickListener(v -> navigateTo(UiNavigator.toHelp(this)));
+        btnDressUpPage.setOnClickListener(v -> navigateTo(UiNavigator.toDressUp(this)));
+        btnViewChatLogs.setOnClickListener(v -> navigateTo(UiNavigator.toChatLogs(this)));
+        btnViewErrorLogs.setOnClickListener(v -> navigateTo(UiNavigator.toErrorLogs(this)));
+        btnSave.setOnClickListener(v -> saveSettings());
+        btnTest.setOnClickListener(v -> testConnection());
+        btnReset.setOnClickListener(v -> resetToDefaults());
+        btnApplyAvatar.setOnClickListener(v -> applyAvatarFromSettings());
+    }
 
-            // 测试连接按钮
-            btnTest.setOnClickListener(v -> testConnection());
-
-            // 重置按钮
-            btnReset.setOnClickListener(v -> resetToDefaults());
-
-            // 查看聊天日志按钮
-            btnViewChatLogs.setOnClickListener(v -> viewChatLogs());
-
-            // 查看错误日志按钮
-            btnViewErrorLogs.setOnClickListener(v -> viewErrorLogs());
-
-            btnCreatePetCard.setOnClickListener(v -> navigateTo(UiNavigator.toCreatePet(this)));
-            btnManagePetCards.setOnClickListener(v -> navigateTo(UiNavigator.toPetList(this)));
-            layoutApiFoldHeader.setOnClickListener(v -> setApiSectionExpanded(!apiSectionExpanded));
-        } catch (Exception e) {
-            Log.e("SettingsActivity", "Error in initViews", e);
-            Toast.makeText(this, "初始化控件失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+    private void openRequestedSection() {
+        String section = getIntent() == null ? "" : getIntent().getStringExtra(EXTRA_OPEN_SECTION);
+        if (TextUtils.isEmpty(section)) {
+            return;
         }
+        setSectionExpanded(section, true);
     }
 
-    private void setApiSectionExpanded(boolean expanded) {
-        apiSectionExpanded = expanded;
-        layoutApiSettingsContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
-        tvApiFoldToggle.setText(expanded ? "收起" : "展开");
-    }
-
-    /**
-     * 当 API 提供方改变时
-     */
-    private void onProviderChanged(int checkedId) {
-        onProviderChanged(checkedId, true);
+    private void setSectionExpanded(@NonNull String section, boolean expanded) {
+        if (SECTION_ROLE.equals(section)) {
+            roleExpanded = expanded;
+            layoutRoleContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
+            tvRoleFoldToggle.setText(expanded ? R.string.settings_collapse : R.string.settings_expand);
+        } else if (SECTION_IMAGE.equals(section)) {
+            imageExpanded = expanded;
+            layoutImageContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
+            tvImageFoldToggle.setText(expanded ? R.string.settings_collapse : R.string.settings_expand);
+        } else if (SECTION_API.equals(section)) {
+            apiExpanded = expanded;
+            layoutApiContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
+            tvApiFoldToggle.setText(expanded ? R.string.settings_collapse : R.string.settings_expand);
+        } else if (SECTION_LOG.equals(section)) {
+            logExpanded = expanded;
+            layoutLogContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
+            tvLogFoldToggle.setText(expanded ? R.string.settings_collapse : R.string.settings_expand);
+        }
     }
 
     private void onProviderChanged(int checkedId, boolean clearInputs) {
-        try {
-            if (checkedId == R.id.rb_openai) {
-                if (clearInputs) {
-                    etApiUrl.setText("");
-                    etApiKey.setText("");
-                    etModelName.setText(Constants.OPENAI_DEFAULT_MODEL);
-                }
-                etApiUrl.setHint(Constants.OPENAI_BASE_URL);
-                etApiKey.setHint("sk-...");
-                tvStatus.setText("状态：OpenAI - 需要有效的 API Key");
-                tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_dark));
-            } else if (checkedId == R.id.rb_doubao) {
-                if (clearInputs) {
-                    etApiUrl.setText("");
-                    etApiKey.setText("");
-                    etModelName.setText(Constants.DOUBAO_DEFAULT_MODEL);
-                }
-                etApiUrl.setHint(Constants.DOUBAO_BASE_URL);
-                etApiKey.setHint("your-bearer-token");
-                tvStatus.setText("状态：豆包 API - 多模态支持（文本+图片）");
-                tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
-            } else if (checkedId == R.id.rb_local) {
-                if (clearInputs) {
-                    etApiUrl.setText("");
-                    etApiKey.setText("");
-                    etModelName.setText(Constants.LOCAL_BACKEND_DEFAULT_MODEL);
-                }
-                etApiUrl.setHint(Constants.LOCAL_BACKEND_URL);
-                etApiKey.setHint("(可选)");
-                tvStatus.setText("状态：本地后端 - 确保后端服务正在运行");
-                tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
-            } else if (checkedId == R.id.rb_custom) {
-                if (clearInputs) {
-                    etApiUrl.setText("");
-                    etApiKey.setText("");
-                    etModelName.setText("");
-                }
-                etApiUrl.setHint(Constants.CUSTOM_API_EXAMPLE_URL);
-                etApiKey.setHint("your-api-key");
-                etModelName.setHint("your-model");
-                tvStatus.setText("状态：自定义 API - 请确保 URL 有效");
-                tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_purple));
+        if (checkedId == R.id.rb_openai) {
+            if (clearInputs) {
+                etApiUrl.setText("");
+                etApiKey.setText("");
+                etModelName.setText(Constants.OPENAI_DEFAULT_MODEL);
             }
-        } catch (Exception e) {
-            Log.e("SettingsActivity", "Error in onProviderChanged", e);
-            tvStatus.setText("状态：设置错误");
+            etApiUrl.setHint(Constants.OPENAI_BASE_URL);
+            etApiKey.setHint("sk-...");
+            tvStatus.setText("状态：OpenAI - 需要有效的 API Key");
+            tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_dark));
+        } else if (checkedId == R.id.rb_doubao) {
+            if (clearInputs) {
+                etApiUrl.setText("");
+                etApiKey.setText("");
+                etModelName.setText(Constants.DOUBAO_DEFAULT_MODEL);
+            }
+            etApiUrl.setHint(Constants.DOUBAO_BASE_URL);
+            etApiKey.setHint("your-bearer-token");
+            tvStatus.setText("状态：豆包 API - 多模态支持（文本+图片）");
+            tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+        } else if (checkedId == R.id.rb_local) {
+            if (clearInputs) {
+                etApiUrl.setText("");
+                etApiKey.setText("");
+                etModelName.setText(Constants.LOCAL_BACKEND_DEFAULT_MODEL);
+            }
+            etApiUrl.setHint(Constants.LOCAL_BACKEND_URL);
+            etApiKey.setHint("(可选)");
+            tvStatus.setText("状态：本地后端 - 确保后端服务正在运行");
+            tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
+        } else {
+            if (clearInputs) {
+                etApiUrl.setText("");
+                etApiKey.setText("");
+                etModelName.setText("");
+            }
+            etApiUrl.setHint(Constants.CUSTOM_API_EXAMPLE_URL);
+            etApiKey.setHint("your-api-key");
+            etModelName.setHint("your-model");
+            tvStatus.setText("状态：自定义 API - 请确保 URL 有效");
+            tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_purple));
         }
     }
 
-    /**
-     * 加载已保存的设置
-     */
     private void loadSettings() {
         ApiSettingsStore.ApiSettings settings = settingsStore.load();
-        String provider = settings.provider;
-        String apiUrl = settings.apiUrl;
-        String apiKey = settings.apiKey;
-        String modelName = settings.modelName;
-
+        int checkedId = resolveProviderRadioId(settings.provider);
         suppressProviderChange = true;
         try {
-            int checkedId = resolveProviderRadioId(provider);
             rgApiProvider.check(checkedId);
-            etApiUrl.setText(apiUrl);
-            etApiKey.setText(apiKey);
-            etModelName.setText(modelName);
+            etApiUrl.setText(settings.apiUrl);
+            etApiKey.setText(settings.apiKey);
+            etModelName.setText(settings.modelName);
+            etAvatarImageUrl.setText(settings.avatarImageUrl);
+            etAvatarUploadEndpoint.setText(settings.avatarUploadUrl);
+            etAvatarRemoveBgEndpoint.setText(settings.avatarRemoveBgUrl);
+            cbAvatarAutoProcess.setChecked(settings.avatarAutoProcess);
             onProviderChanged(checkedId, false);
+            tvAvatarStatus.setText("图片设置已加载");
         } finally {
             suppressProviderChange = false;
         }
@@ -216,16 +259,16 @@ public class SettingsActivity extends BaseActivity {
         return R.id.rb_openai;
     }
 
-    /**
-     * 保存设置（带完整错误处理）
-     */
     private void saveSettings() {
         try {
             String apiUrl = etApiUrl.getText().toString().trim();
             String apiKey = etApiKey.getText().toString().trim();
             String modelName = etModelName.getText().toString().trim();
+            String avatarImageUrl = etAvatarImageUrl.getText().toString().trim();
+            String avatarUploadUrl = etAvatarUploadEndpoint.getText().toString().trim();
+            String avatarRemoveBgUrl = etAvatarRemoveBgEndpoint.getText().toString().trim();
+            boolean autoProcess = cbAvatarAutoProcess.isChecked();
 
-            // 验证输入
             int checkedId = rgApiProvider.getCheckedRadioButtonId();
             String provider = resolveProviderValue(checkedId);
             apiUrl = resolveApiUrl(provider, apiUrl);
@@ -235,20 +278,26 @@ public class SettingsActivity extends BaseActivity {
                 showError("API URL 不能为空");
                 return;
             }
-
             if (!Constants.PROVIDER_LOCAL.equals(provider) && apiKey.isEmpty()) {
                 showError("API Key 不能为空");
                 return;
             }
-
             if (modelName.isEmpty()) {
                 showError("模型名称不能为空");
                 return;
             }
 
-            settingsStore.save(new ApiSettingsStore.ApiSettings(provider, apiUrl, apiKey, modelName));
+            settingsStore.save(new ApiSettingsStore.ApiSettings(
+                    provider,
+                    apiUrl,
+                    apiKey,
+                    modelName,
+                    avatarImageUrl,
+                    avatarUploadUrl,
+                    avatarRemoveBgUrl,
+                    autoProcess
+            ));
 
-            // 第二步：更新 ApiConfig（可能抛出异常）
             try {
                 if (Constants.PROVIDER_OPENAI.equals(provider)) {
                     ApiConfig.getInstance().configureOpenAI(apiKey, modelName);
@@ -261,19 +310,11 @@ public class SettingsActivity extends BaseActivity {
                 }
             } catch (Exception e) {
                 Log.e(TAG, "API 配置失败: " + e.getMessage(), e);
-                // 即使 API 配置失败，设置已持久化，不中断流程
-                // 用户可以重新尝试或手动调整设置
             }
 
-            // 第三步：更新 UI 状态
-            runOnUiThread(() -> {
-                tvStatus.setText("✓ 设置已保存");
-                tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
-                Toast.makeText(this, "设置已保存，请尝试连接", Toast.LENGTH_SHORT).show();
-            });
-            
-            Log.i(TAG, "设置已成功保存: Provider=" + provider);
-
+            tvStatus.setText(getString(R.string.settings_saved));
+            tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+            Toast.makeText(this, R.string.settings_saved, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Log.e(TAG, "保存设置时出错: " + e.getMessage(), e);
             showError("保存设置失败: " + e.getMessage());
@@ -325,34 +366,18 @@ public class SettingsActivity extends BaseActivity {
         return inputModelName;
     }
 
-    /**
-     * 显示错误提示
-     */
-    private void showError(String message) {
-        tvStatus.setText("✗ " + message);
-        tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-        Log.w(TAG, "Settings Error: " + message);
-    }
-
-    /**
-     * 测试 API 连接
-     */
     private void testConnection() {
         String apiUrl = etApiUrl.getText().toString().trim();
         String apiKey = etApiKey.getText().toString().trim();
         String modelName = etModelName.getText().toString().trim();
         int selectedProvider = rgApiProvider.getCheckedRadioButtonId();
+        String provider = resolveProviderValue(selectedProvider);
 
-        apiUrl = resolveApiUrl(resolveProviderValue(selectedProvider), apiUrl);
-        modelName = resolveModelName(resolveProviderValue(selectedProvider), modelName);
+        apiUrl = resolveApiUrl(provider, apiUrl);
+        modelName = resolveModelName(provider, modelName);
 
-        final String finalApiUrl = apiUrl;
-        final String finalModelName = modelName;
-        final int finalSelectedProvider = selectedProvider;
-
-        if (finalApiUrl.isEmpty() && finalSelectedProvider == R.id.rb_custom) {
-            Toast.makeText(this, "请先填入 API URL", Toast.LENGTH_SHORT).show();
+        if (Constants.PROVIDER_CUSTOM.equals(provider) && apiUrl.isEmpty()) {
+            showToast("请先填入 API URL");
             return;
         }
 
@@ -360,80 +385,117 @@ public class SettingsActivity extends BaseActivity {
         tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
         btnTest.setEnabled(false);
 
-        ApiConnectionTester.testConnection(
-                resolveProviderValue(finalSelectedProvider),
-                finalApiUrl,
-                apiKey,
-                finalModelName,
-                new ApiConnectionTester.Callback() {
+        ApiConnectionTester.testConnection(provider, apiUrl, apiKey, modelName, new ApiConnectionTester.Callback() {
+            @Override
+            public void onSuccess(@NonNull String message) {
+                runOnUiThread(() -> {
+                    tvStatus.setText(message);
+                    tvStatus.setTextColor(ContextCompat.getColor(SettingsActivity.this, android.R.color.holo_green_dark));
+                    Toast.makeText(SettingsActivity.this, R.string.settings_test_ok, Toast.LENGTH_SHORT).show();
+                    btnTest.setEnabled(true);
+                });
+            }
+
+            @Override
+            public void onFailure(@NonNull String message) {
+                runOnUiThread(() -> {
+                    tvStatus.setText("✗ " + message);
+                    tvStatus.setTextColor(ContextCompat.getColor(SettingsActivity.this, android.R.color.holo_red_dark));
+                    Toast.makeText(SettingsActivity.this, message, Toast.LENGTH_SHORT).show();
+                    btnTest.setEnabled(true);
+                });
+            }
+        });
+    }
+
+    private void resetToDefaults() {
+        rgApiProvider.check(R.id.rb_openai);
+        etApiUrl.setText(Constants.OPENAI_BASE_URL);
+        etApiKey.setText("");
+        etModelName.setText(Constants.OPENAI_DEFAULT_MODEL);
+        etAvatarImageUrl.setText("");
+        etAvatarUploadEndpoint.setText("");
+        etAvatarRemoveBgEndpoint.setText("");
+        cbAvatarAutoProcess.setChecked(false);
+        tvStatus.setText("✓ 已重置为默认设置");
+        tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
+    }
+
+    private void applyAvatarFromSettings() {
+        Pet activePet = resolveActivePet();
+        if (activePet == null) {
+            showToast(getString(R.string.settings_avatar_missing_role));
+            return;
+        }
+
+        String imageUrl = etAvatarImageUrl.getText().toString().trim();
+        if (TextUtils.isEmpty(imageUrl)) {
+            showToast(getString(R.string.settings_avatar_missing_url));
+            return;
+        }
+
+        tvAvatarStatus.setText(getString(R.string.settings_avatar_processing));
+        btnApplyAvatar.setEnabled(false);
+
+        String uploadEndpoint = etAvatarUploadEndpoint.getText().toString().trim();
+        String removeBgEndpoint = etAvatarRemoveBgEndpoint.getText().toString().trim();
+        boolean autoProcess = cbAvatarAutoProcess.isChecked();
+
+        AvatarImagePipeline.processRemoteImage(
+                this,
+                imageUrl,
+                uploadEndpoint,
+                removeBgEndpoint,
+                autoProcess,
+                activePet.getId(),
+                new AvatarImagePipeline.Callback() {
                     @Override
-                    public void onSuccess(@NonNull String message) {
+                    public void onSuccess(@NonNull String localAvatarUri) {
                         runOnUiThread(() -> {
-                            tvStatus.setText(message);
-                            tvStatus.setTextColor(ContextCompat.getColor(SettingsActivity.this, android.R.color.holo_green_dark));
-                            Toast.makeText(SettingsActivity.this, "✓ API 连接测试成功", Toast.LENGTH_SHORT).show();
-                            btnTest.setEnabled(true);
+                            activePet.setAvatar(localAvatarUri);
+                            petStore.updatePet(activePet);
+                            tvAvatarStatus.setText(getString(R.string.settings_avatar_apply_success));
+                            btnApplyAvatar.setEnabled(true);
+                            Toast.makeText(SettingsActivity.this, R.string.settings_avatar_apply_success, Toast.LENGTH_SHORT).show();
                         });
                     }
 
                     @Override
                     public void onFailure(@NonNull String message) {
                         runOnUiThread(() -> {
-                            tvStatus.setText("✗ " + message);
-                            tvStatus.setTextColor(ContextCompat.getColor(SettingsActivity.this, android.R.color.holo_red_dark));
-                            Toast.makeText(SettingsActivity.this, "✗ " + message, Toast.LENGTH_SHORT).show();
-                            btnTest.setEnabled(true);
+                            tvAvatarStatus.setText(getString(R.string.settings_avatar_failure, message));
+                            btnApplyAvatar.setEnabled(true);
+                            showError(message);
                         });
                     }
                 }
         );
     }
 
-    /**
-     * 重置为默认设置
-     */
-    private void resetToDefaults() {
-        try {
-            rgApiProvider.check(R.id.rb_openai);
-            etApiUrl.setText(Constants.OPENAI_BASE_URL);
-            etApiKey.setText("");
-            etModelName.setText(Constants.OPENAI_DEFAULT_MODEL);
-            
-            updateResetUI();
-        } catch (Exception e) {
-            Log.e("SettingsActivity", "Error in resetToDefaults", e);
-            Toast.makeText(this, "重置失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
+    @Nullable
+    private Pet resolveActivePet() {
+        List<Pet> pets = petStore.getAllPets();
+        if (pets.isEmpty()) {
+            return null;
         }
+        long savedId = 0L;
+        try {
+            savedId = Long.parseLong(SPUtils.getString(this, Constants.KEY_ACTIVE_PET_ID, "0"));
+        } catch (Exception ignored) {
+        }
+        if (savedId > 0) {
+            Pet pet = petStore.getPetById(savedId);
+            if (pet != null) {
+                return pet;
+            }
+        }
+        return pets.get(0);
     }
 
-    /**
-     * 查看聊天日志
-     */
-    private void viewChatLogs() {
-        navigateTo(UiNavigator.toChatLogs(this));
+    private void showError(String message) {
+        tvStatus.setText("✗ " + message);
+        tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        Log.w(TAG, message);
     }
-
-    /**
-     * 查看 API 错误日志
-     */
-    private void viewErrorLogs() {
-        navigateTo(UiNavigator.toErrorLogs(this));
-    }
-
-    /**
-     * 重置后更新 UI
-     */
-    private void updateResetUI() {
-        tvStatus.setText("✓ 已重置为默认设置");
-        tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
-        Toast.makeText(this, "已重置为默认设置", Toast.LENGTH_SHORT).show();
-    }
-
-    /**
-     * 验证 URL 格式
-     */
-    private boolean isValidUrl(String url) {
-        return url != null && (url.startsWith("http://") || url.startsWith("https://"));
-    }
-
 }

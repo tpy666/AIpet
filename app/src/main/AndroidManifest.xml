@@ -54,6 +54,14 @@
             android:name=".ui.activity.SettingsActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.activity.HelpActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.DressUpActivity"
+            android:exported="false" />
+
         <!-- 聊天日志查看器 -->
         <activity
             android:name=".ui.activity.ChatLogViewerActivity"
@@ -62,6 +70,22 @@
         <!-- API 错误日志查看器 -->
         <activity
             android:name=".ui.activity.ErrorLogViewerActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.StoreActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.FeedActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.OutingActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.AffectionActivity"
             android:exported="false" />
 
     </application>

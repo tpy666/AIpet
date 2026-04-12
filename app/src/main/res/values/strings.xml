@@ -41,4 +41,106 @@
     <string name="pet_personality_format">性格: %1$s</string>
     <string name="pet_speaking_style_format">说话风格: %1$s</string>
     <string name="pet_appearance_format">外观: %1$s</string>
+
+    <string name="settings_title">设置</string>
+    <string name="settings_role_card_section">角色卡设置</string>
+    <string name="settings_image_section">图片设置</string>
+    <string name="settings_api_section">API 设置</string>
+    <string name="settings_log_section">日志设置</string>
+    <string name="settings_expand">展开</string>
+    <string name="settings_collapse">收起</string>
+    <string name="settings_avatar_url">网页图片地址</string>
+    <string name="settings_avatar_upload_endpoint">图片上传接口</string>
+    <string name="settings_avatar_remove_bg_endpoint">去背接口</string>
+    <string name="settings_avatar_auto_process">自动去背并上传</string>
+    <string name="settings_avatar_apply">处理并应用头像</string>
+    <string name="settings_avatar_apply_success">头像已应用到当前角色</string>
+    <string name="settings_avatar_missing_role">请先创建并选择一个角色</string>
+    <string name="settings_avatar_missing_url">请先填写网页图片地址</string>
+    <string name="settings_avatar_processing">正在处理头像...</string>
+    <string name="settings_avatar_failure">头像处理失败：%1$s</string>
+    <string name="settings_api_section_title">网络与模型</string>
+    <string name="settings_help_short">帮助</string>
+    <string name="settings_dress_up_short">换装</string>
+    <string name="settings_create_card">创建角色卡</string>
+    <string name="settings_manage_card">管理角色卡</string>
+    <string name="settings_view_chat_logs">查看聊天日志</string>
+    <string name="settings_view_error_logs">查看 API 错误日志</string>
+    <string name="settings_select_api_provider">选择 API 提供方</string>
+    <string name="settings_api_url">API 端点 URL</string>
+    <string name="settings_api_key">API 密钥</string>
+    <string name="settings_model_name">模型名称</string>
+    <string name="settings_save">保存设置</string>
+    <string name="settings_test">测试连接</string>
+    <string name="settings_reset">重置默认</string>
+    <string name="settings_saved">设置已保存，请尝试连接</string>
+    <string name="settings_test_ok">API 连接测试成功</string>
+    <string name="settings_test_fail">API 连接测试失败</string>
+    <string name="settings_help_header">使用提示</string>
+    <string name="settings_api_hint">请在这里配置聊天模型、密钥和图片处理接口。</string>
+    <string name="settings_log_hint">日志页支持复制、清空和查看深度思考过程。</string>
+
+    <string name="help_title">帮助</string>
+    <string name="help_header">帮助中心</string>
+    <string name="help_intro">这里汇总了常用功能说明。</string>
+    <string name="help_chat_title">聊天</string>
+    <string name="help_chat_desc">输入消息即可与宠物互动，聊天日志可单独查看回答与深度思考。</string>
+    <string name="help_avatar_title">头像</string>
+    <string name="help_avatar_desc">图片上传、去背与应用入口都在设置页中完成。</string>
+    <string name="help_store_title">商店与换装</string>
+    <string name="help_store_desc">可在商店页选择服装，并在换装页直接应用到当前角色。</string>
+
+    <string name="dress_up_title">换装</string>
+    <string name="dress_up_header">换装中心</string>
+    <string name="dress_up_hint_select">请选择一套服装</string>
+    <string name="dress_up_apply">应用换装</string>
+    <string name="dress_up_success">已切换为：%1$s</string>
+    <string name="dress_up_missing_role">请先选择当前角色</string>
+
+    <string name="store_title">商店</string>
+    <string name="store_header">服装商店</string>
+    <string name="store_hint_select">请选择服装</string>
+    <string name="store_confirm">确认购买并换装</string>
+    <string name="store_toast_select_first">请先选择一件服装</string>
+    <string name="store_selected_format">已选择：%1$s（好感 +%2$d）</string>
+
+    <string name="feed_title">喂食</string>
+    <string name="feed_header">喂食选择</string>
+    <string name="feed_hint_select">请选择一种食物</string>
+    <string name="feed_confirm">确认投喂</string>
+    <string name="feed_toast_select_first">请选择一种食物</string>
+    <string name="feed_selected_format">已选择：%1$s（好感 +%2$d）</string>
+
+    <string name="outing_title">外出</string>
+    <string name="outing_header">外出地点</string>
+    <string name="outing_hint_select">请选择一个地点</string>
+    <string name="outing_confirm">确认外出</string>
+    <string name="outing_toast_select_first">请选择一个外出地点</string>
+    <string name="outing_selected_format">已选择：%1$s（好感 +%2$d）</string>
+
+    <string name="affection_plus_format">好感 +%1$d</string>
+
+    <string name="store_item_default_name">日常围巾</string>
+    <string name="store_item_default_desc">基础百搭款，亲和力提升</string>
+    <string name="store_item_hoodie_name">连帽卫衣</string>
+    <string name="store_item_hoodie_desc">温暖日常风，适合轻松外出</string>
+    <string name="store_item_formal_name">小礼服</string>
+    <string name="store_item_formal_desc">正式聚会风，提升精致感</string>
+
+    <string name="food_item_biscuit_name">营养饼干</string>
+    <string name="food_item_biscuit_desc">均衡营养，稳定提升心情</string>
+    <string name="food_item_fruit_name">水果拼盘</string>
+    <string name="food_item_fruit_desc">清爽健康，提升好感</string>
+    <string name="food_item_energy_name">能量罐头</string>
+    <string name="food_item_energy_desc">快速补充体力，提升较高</string>
+
+    <string name="outing_place_park_name">城市公园</string>
+    <string name="outing_place_park_desc">空气清新，适合散步放松</string>
+    <string name="outing_place_seaside_name">海边栈道</string>
+    <string name="outing_place_seaside_desc">视野开阔，心情加倍愉悦</string>
+    <string name="outing_place_street_name">宠物街区</string>
+    <string name="outing_place_street_desc">社交互动多，活力提升</string>
+
+    <string name="cd_store_item_icon">服装图标</string>
+    <string name="cd_food_item_icon">食物图标</string>
 </resources>

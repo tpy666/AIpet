@@ -1,6 +1,7 @@
 package com.example.aipet.ui.activity;
 
 import android.Manifest;
+import android.content.Intent;
 import android.net.Uri;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -25,6 +26,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
@@ -33,16 +35,16 @@ import androidx.core.content.ContextCompat;
 import com.example.aipet.R;
 import com.example.aipet.data.model.Pet;
 import com.example.aipet.network.ApiClient;
-import com.example.aipet.network.AssistantReplyFormatter;
+import com.example.aipet.network.APIAnswer;
 import com.example.aipet.network.ChatRequest;
 import com.example.aipet.network.NetworkConfigBootstrap;
 import com.example.aipet.network.PetPromptBuilder;
-import com.example.aipet.ui.avatar.AvatarUploadPort;
 import com.example.aipet.ui.navigation.UiNavigator;
 import com.example.aipet.util.ChatLogger;
 import com.example.aipet.util.Constants;
 import com.example.aipet.util.SPUtils;
 import com.example.aipet.util.UtilHub;
+import com.example.aipet.util.AffectionHistoryStore;
 import com.example.aipet.util.store.PetStore;
 
 import org.json.JSONObject;
@@ -96,6 +98,7 @@ public class MainActivity extends BaseActivity {
     private ScrollView recentScrollView;
     private ScrollView recentFullscreenScrollView;
     private TextView tvTime;
+    private TextView tvDate;
     private TextView tvMeta;
     private TextView tvCurrentPetChip;
     private TextView tvPetName;
@@ -123,20 +126,14 @@ public class MainActivity extends BaseActivity {
     private boolean petSwitcherExpanded = false;
     private TextView initialNoticeBubble;
     private TextView initialAffectionBubble;
-    private final AvatarUploadPort avatarUploadPort = new AvatarUploadPort() {
-        @Override
-        public void requestLocalImage(@NonNull ActivityResultLauncher<String> pickerLauncher) {
-            pickerLauncher.launch("image/*");
-        }
+        private final ActivityResultLauncher<Intent> feedLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onFeedResult);
 
-        @Override
-        public void requestRemoteImage(@NonNull String imageUrl) {
-            // 预留：后续可接入真实下载、缓存与鉴权链路。
-        }
-    };
+        private final ActivityResultLauncher<Intent> storeLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onStoreResult);
 
-    private final ActivityResultLauncher<String> localImagePickerLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), this::onLocalImagePicked);
+        private final ActivityResultLauncher<Intent> outingLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onOutingResult);
 
     private final Runnable clockRunnable = new Runnable() {
         @Override
@@ -176,6 +173,7 @@ public class MainActivity extends BaseActivity {
         topReplyBubbleContainer = bind(R.id.layout_top_reply_bubbles);
         petSwitchListLayout = bind(R.id.layout_pet_switch_list);
         tvTime = bind(R.id.tv_time);
+        tvDate = bind(R.id.tv_date);
         tvMeta = bind(R.id.tv_meta);
         tvCurrentPetChip = bind(R.id.tv_current_pet_chip);
         recentBubblesLayout = bind(R.id.layout_recent_bubbles);
@@ -194,17 +192,16 @@ public class MainActivity extends BaseActivity {
     }
 
     private void initViews() {
-        click(R.id.btn_affection, v -> showAffectionDialog());
+        click(R.id.btn_affection, v -> showAffectionPage());
         click(R.id.btn_logs, v -> navigateTo(UiNavigator.toChatLogs(this)));
-        click(R.id.btn_dress_up, v -> showDressUpDialog());
+        click(R.id.btn_dress_up, v -> navigateTo(UiNavigator.toDressUp(this)));
 
-        click(R.id.nav_help, v -> showHelpDialog());
+        click(R.id.nav_help, v -> navigateTo(UiNavigator.toHelp(this)));
         click(R.id.nav_feed, v -> onFeedPet());
         click(R.id.nav_store, v -> onOpenStore());
         click(R.id.nav_outing, v -> onOutingToggle());
         click(R.id.nav_settings, v -> navigateTo(UiNavigator.toSettings(this)));
         btnPetSwitchExpand.setOnClickListener(v -> togglePetSwitcher());
-        ivPetAvatar.setOnClickListener(v -> showAvatarSourceDialog());
 
         click(R.id.btn_recent_toggle, v -> toggleRecentPanel());
         btnRecentFullscreen.setOnClickListener(v -> showRecentFullscreen());
@@ -222,6 +219,7 @@ public class MainActivity extends BaseActivity {
     private void updateDateTimeOnly() {
         LocalDateTime now = LocalDateTime.now();
         tvTime.setText(now.format(TIME_FORMATTER));
+        tvDate.setText(now.format(DATE_FORMATTER));
 
         currentWeekText = getWeekdayText(now.getDayOfWeek());
         currentDateText = now.format(DATE_FORMATTER);
@@ -229,7 +227,7 @@ public class MainActivity extends BaseActivity {
     }
 
     private void updateMetaText() {
-        tvMeta.setText(String.format(Locale.CHINA, "%s  %s  %s  %s", currentWeekText, currentDateText, currentCityName, latestWeatherText));
+        tvMeta.setText(String.format(Locale.CHINA, "%s  %s", currentCityName, latestWeatherText));
     }
 
     private void tryRefreshWeather(boolean force) {
@@ -522,40 +520,41 @@ public class MainActivity extends BaseActivity {
             showToast("请输入聊天内容");
             return;
         }
+
         if (activePet == null) {
-            showToast("请先创建宠物角色");
-            navigateTo(UiNavigator.toCreatePet(this));
+            showToast(getString(R.string.chat_no_role_bound));
             return;
         }
 
-        etHomeInput.setText("");
         appendRecentChat(RecentChatRole.USER, input);
         chatLogger.logUserMessage(input, activePet.getName());
-        chatLogger.logApiRequest(ApiClient.getApiConfig().getApiUrl(), Constants.HTTP_METHOD_POST, "home_chat_message");
-
+        etHomeInput.setText("");
         setSendLoading(true);
+
         ChatRequest.PetInfo petInfo = new ChatRequest.PetInfo(activePet);
-        String prompt = PetPromptBuilder.buildSystemPrompt(activePet);
-        ApiClient.sendChatMessage(input, activePet.getId(), petInfo, prompt, new ApiClient.ChatCallback() {
+        String systemPrompt = PetPromptBuilder.buildSystemPrompt(activePet);
+        String apiUrl = ApiClient.getApiConfig().getApiUrl();
+        chatLogger.logApiRequest(apiUrl, Constants.HTTP_METHOD_POST, "home_chat_message");
+
+        ApiClient.sendChatMessage(input, activePet.getId(), petInfo, systemPrompt, new ApiClient.ChatCallback() {
             @Override
             public void onSuccess(String reply) {
                 runOnUiThread(() -> {
                     setSendLoading(false);
-                    String finalReply = reply == null ? "" : reply.trim();
-                    if (finalReply.isEmpty()) {
-                        finalReply = "抱歉，我刚刚没有听清楚，再说一次吧。";
-                    }
-                    AssistantReplyFormatter.FormatResult formatted = AssistantReplyFormatter.format(finalReply);
-                    String displayText = formatted.displayText == null || formatted.displayText.trim().isEmpty()
-                            ? finalReply
-                            : formatted.displayText;
-                    appendRecentChat(RecentChatRole.PET, displayText);
-                    addTopReplyBubble(displayText);
-                    speakText(displayText);
-                    chatLogger.logApiResponse(displayText, 200);
-                    chatLogger.logPetReply(displayText, activePet.getName());
+
+                    APIAnswer apiAnswer = APIAnswer.fromRaw(reply == null ? "" : reply);
+                    String answerOnly = apiAnswer.answerOnly();
+
+                    appendRecentChat(RecentChatRole.PET, answerOnly);
+                    addTopReplyBubble(answerOnly);
+                    speakText(answerOnly);
+
+                    chatLogger.logApiResponse(answerOnly, 200);
+                    chatLogger.logApiAnswer(apiAnswer.toLogBlock());
+                    chatLogger.logPetReply(answerOnly, activePet.getName());
 
                     affectionValue = Math.min(100, affectionValue + 2);
+                    AffectionHistoryStore.append(MainActivity.this, "聊天互动", 2);
                     noticeCount += 1;
                     updateAffectionBubble();
                     updateNoticeBubble();
@@ -818,87 +817,109 @@ public class MainActivity extends BaseActivity {
         refreshPetSwitcher();
     }
 
-    private void showAffectionDialog() {
-        String message = "可增加好感度的行为:\n"
-                + "- 聊天互动 +2\n"
-                + "- 喂食 +5\n"
-                + "- 商店购买礼物 +3\n"
-                + "- 外出散步 +4\n\n"
-                + "当前好感度: " + affectionValue;
-        new AlertDialog.Builder(this)
-                .setTitle("好感度查询")
-                .setMessage(message)
-                .setPositiveButton("知道了", null)
-                .show();
-    }
-
-    private void showDressUpDialog() {
-        if (activePet == null) {
-            showToast("请先创建宠物角色");
-            return;
-        }
-        List<OutfitItem> unlocked = getUnlockedOutfits(activePet.getId());
-        String[] names = new String[unlocked.size()];
-        int checked = 0;
-        String currentOutfitId = parseOutfitId(activePet.getAvatar());
-        for (int i = 0; i < unlocked.size(); i++) {
-            names[i] = unlocked.get(i).name;
-            if (unlocked.get(i).id.equals(currentOutfitId)) {
-                checked = i;
-            }
-        }
-        new AlertDialog.Builder(this)
-                .setTitle("换装")
-                .setSingleChoiceItems(names, checked, (dialog, which) -> {
-                    OutfitItem selected = unlocked.get(which);
-                    applyOutfit(selected);
-                    dialog.dismiss();
-                })
-                .setNegativeButton("取消", null)
-                .show();
+    private void showAffectionPage() {
+        Intent intent = UiNavigator.toAffection(this);
+        intent.putExtra("affection_value", affectionValue);
+        navigateTo(intent);
     }
 
     private void onFeedPet() {
-        affectionValue = Math.min(100, affectionValue + 5);
-        noticeCount += 1;
-        updateAffectionBubble();
-        updateNoticeBubble();
-        appendRecentChat(RecentChatRole.SYSTEM, "你喂食了宠物，好感度 +5");
-        showToast("喂食成功，好感度 +5");
+        feedLauncher.launch(UiNavigator.toFeed(this));
     }
 
     private void onOpenStore() {
         if (activePet == null) {
-            showToast("请先创建宠物角色");
+            showToast(getString(R.string.chat_no_role_bound));
             return;
         }
-        String[] items = new String[outfitCatalog.size()];
-        List<OutfitItem> unlocked = getUnlockedOutfits(activePet.getId());
-        for (int i = 0; i < outfitCatalog.size(); i++) {
-            OutfitItem item = outfitCatalog.get(i);
-            boolean has = containsOutfit(unlocked, item.id);
-            items[i] = has ? (item.name + " (已拥有)") : (item.name + " (" + item.price + "金币)");
-        }
-
-        new AlertDialog.Builder(this)
-                .setTitle("商店-服饰")
-                .setItems(items, (dialog, which) -> handleShopSelection(outfitCatalog.get(which)))
-                .setNegativeButton("关闭", null)
-                .show();
+        storeLauncher.launch(UiNavigator.toStore(this));
     }
 
     private void onOutingToggle() {
-        stageBackgroundIndex = (stageBackgroundIndex + 1) % stageBackgrounds.length;
-        rootLayout.setBackgroundResource(stageBackgrounds[stageBackgroundIndex]);
-        affectionValue = Math.min(100, affectionValue + 4);
+        outingLauncher.launch(UiNavigator.toOuting(this));
+    }
+
+    private void onStoreResult(ActivityResult result) {
+        if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+            return;
+        }
+        if (activePet == null) {
+            showToast(getString(R.string.chat_no_role_bound));
+            return;
+        }
+
+        Intent data = result.getData();
+        String outfitId = data.getStringExtra(StoreActivity.EXTRA_STORE_ITEM_ID);
+        String outfitName = data.getStringExtra(StoreActivity.EXTRA_STORE_ITEM_NAME);
+        int delta = data.getIntExtra(StoreActivity.EXTRA_STORE_AFFECTION_DELTA, 3);
+
+        OutfitItem item = findOutfitById(outfitId);
+        if (item == null) {
+            item = findOutfitByName(outfitName);
+        }
+        if (item == null) {
+            showToast("未识别的服饰选择");
+            return;
+        }
+
+        handleShopSelectionWithDelta(item, delta);
+    }
+
+    private void onFeedResult(ActivityResult result) {
+        if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+            return;
+        }
+
+        Intent data = result.getData();
+        String food = data.getStringExtra(FeedActivity.EXTRA_FOOD_NAME);
+        int delta = data.getIntExtra(FeedActivity.EXTRA_FOOD_AFFECTION_DELTA, 4);
+
+        affectionValue = Math.min(100, affectionValue + delta);
+        AffectionHistoryStore.append(this, "喂食", delta);
         noticeCount += 1;
         updateAffectionBubble();
         updateNoticeBubble();
-        appendRecentChat(RecentChatRole.SYSTEM, "外出散步完成，背景已切换，好感度 +4");
-        showToast("已切换外出背景");
+        appendRecentChat(RecentChatRole.SYSTEM, "喂食了「" + (food == null ? "食物" : food) + "」，好感度 +" + delta);
+        showToast("喂食成功，好感 +" + delta);
+    }
+
+    private void onOutingResult(ActivityResult result) {
+        if (result.getResultCode() != RESULT_OK || result.getData() == null) {
+            return;
+        }
+
+        Intent data = result.getData();
+        String place = data.getStringExtra(OutingActivity.EXTRA_OUTING_PLACE);
+        int delta = data.getIntExtra(OutingActivity.EXTRA_OUTING_AFFECTION_DELTA, 4);
+
+        stageBackgroundIndex = (stageBackgroundIndex + 1) % stageBackgrounds.length;
+        rootLayout.setBackgroundResource(stageBackgrounds[stageBackgroundIndex]);
+        affectionValue = Math.min(100, affectionValue + delta);
+        AffectionHistoryStore.append(this, "外出", delta);
+        noticeCount += 1;
+        updateAffectionBubble();
+        updateNoticeBubble();
+        appendRecentChat(RecentChatRole.SYSTEM, "去了「" + (place == null ? "外出地点" : place) + "」，好感度 +" + delta);
+        showToast("外出完成，好感 +" + delta);
+    }
+
+    private OutfitItem findOutfitByName(String name) {
+        if (TextUtils.isEmpty(name)) {
+            return null;
+        }
+        for (OutfitItem item : outfitCatalog) {
+            if (name.equals(item.name)) {
+                return item;
+            }
+        }
+        return null;
     }
 
     private void handleShopSelection(OutfitItem item) {
+        handleShopSelectionWithDelta(item, 3);
+    }
+
+    private void handleShopSelectionWithDelta(OutfitItem item, int affectionDelta) {
         List<OutfitItem> unlocked = getUnlockedOutfits(activePet.getId());
         if (containsOutfit(unlocked, item.id)) {
             applyOutfit(item);
@@ -907,11 +928,12 @@ public class MainActivity extends BaseActivity {
         }
 
         unlockOutfit(activePet.getId(), item.id);
-        affectionValue = Math.min(100, affectionValue + 3);
+        affectionValue = Math.min(100, affectionValue + affectionDelta);
+        AffectionHistoryStore.append(this, "商店购买", affectionDelta);
         noticeCount += 1;
         updateAffectionBubble();
         updateNoticeBubble();
-        appendRecentChat(RecentChatRole.SYSTEM, "购买了服饰「" + item.name + "」，好感度 +3");
+        appendRecentChat(RecentChatRole.SYSTEM, "购买了服饰「" + item.name + "」，好感度 +" + affectionDelta);
         applyOutfit(item);
         showToast("购买成功并已换装: " + item.name);
     }
@@ -987,67 +1009,6 @@ public class MainActivity extends BaseActivity {
         tvPetName.setText(String.format(Locale.CHINA, "宠物: %s（%s）", activePet.getName(), selected.name));
     }
 
-    private void showAvatarSourceDialog() {
-        if (activePet == null) {
-            showToast("请先创建宠物角色");
-            return;
-        }
-
-        CharSequence[] options = {
-                getString(R.string.home_pet_avatar_upload_local),
-                getString(R.string.home_pet_avatar_upload_remote)
-        };
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.home_pet_avatar_upload_title)
-                .setItems(options, (dialog, which) -> {
-                    if (which == 0) {
-                        avatarUploadPort.requestLocalImage(localImagePickerLauncher);
-                    } else {
-                        showRemoteUrlInputDialog();
-                    }
-                })
-                .setNegativeButton("取消", null)
-                .show();
-    }
-
-    private void showRemoteUrlInputDialog() {
-        EditText input = new EditText(this);
-        input.setHint(R.string.home_pet_avatar_remote_hint);
-
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.home_pet_avatar_upload_remote)
-                .setView(input)
-                .setPositiveButton(R.string.home_pet_avatar_remote_apply, (dialog, which) -> {
-                    String url = input.getText() == null ? "" : input.getText().toString().trim();
-                    if (TextUtils.isEmpty(url)) {
-                        showToast("图片链接不能为空");
-                        return;
-                    }
-                    avatarUploadPort.requestRemoteImage(url);
-                    persistAndApplyAvatar("remote:" + url);
-                    showToast(getString(R.string.home_pet_avatar_upload_reserved));
-                })
-                .setNegativeButton("取消", null)
-                .show();
-    }
-
-    private void onLocalImagePicked(Uri uri) {
-        if (uri == null) {
-            return;
-        }
-        persistAndApplyAvatar("local:" + uri.toString());
-    }
-
-    private void persistAndApplyAvatar(@NonNull String avatarValue) {
-        if (activePet == null) {
-            return;
-        }
-        activePet.setAvatar(avatarValue);
-        petStore.updatePet(activePet);
-        applyCustomAvatar(avatarValue);
-        tvPetName.setText(String.format(Locale.CHINA, "宠物: %s", activePet.getName()));
-    }
-
     private boolean isCustomAvatar(String avatarValue) {
         return !TextUtils.isEmpty(avatarValue)
                 && (avatarValue.startsWith("local:") || avatarValue.startsWith("remote:"));
@@ -1062,7 +1023,6 @@ public class MainActivity extends BaseActivity {
                 ivPetAvatar.setImageResource(R.drawable.ic_pet_avatar_placeholder);
             }
         } else {
-            // 远程图片暂时使用占位图，保留 URL 供后续真实下载链路使用。
             ivPetAvatar.setImageResource(R.drawable.ic_pet_avatar_placeholder);
         }
         tvPetAvatarPlaceholder.setVisibility(View.GONE);
@@ -1139,19 +1099,6 @@ public class MainActivity extends BaseActivity {
         } catch (Exception e) {
             return 0L;
         }
-    }
-
-    private void showHelpDialog() {
-        String msg = "页面说明:\n"
-                + "1. 顶部显示时间、日期地点天气\n"
-                + "2. 右侧可查询好感度/聊天日志/换装\n"
-                + "3. 底部可执行喂食、商店、外出和设置\n"
-                + "4. 输入框可直接和宠物聊天，左侧可展开最近聊天夹层";
-        new AlertDialog.Builder(this)
-                .setTitle("帮助")
-                .setMessage(msg)
-                .setPositiveButton("明白了", null)
-                .show();
     }
 
     @Override

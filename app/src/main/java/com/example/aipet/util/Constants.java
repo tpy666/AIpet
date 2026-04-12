@@ -56,6 +56,26 @@ public class Constants {
      * 模型名称键名
      */
     public static final String KEY_MODEL_NAME = "model_name";
+
+    /**
+     * 头像图片来源 URL
+     */
+    public static final String KEY_AVATAR_IMAGE_URL = "avatar_image_url";
+
+    /**
+     * 头像上传接口地址
+     */
+    public static final String KEY_AVATAR_UPLOAD_URL = "avatar_upload_url";
+
+    /**
+     * 头像去背接口地址
+     */
+    public static final String KEY_AVATAR_REMOVE_BG_URL = "avatar_remove_bg_url";
+
+    /**
+     * 是否自动去背并上传
+     */
+    public static final String KEY_AVATAR_AUTO_PROCESS = "avatar_auto_process";
     
     // ============ API 端点 URL ============
     
@@ -134,6 +154,11 @@ public class Constants {
      * API 响应日志标签
      */
     public static final String LOG_TAG_API_RESPONSE = "API_RESPONSE";
+
+    /**
+     * API 回答详情（含深度思考）
+     */
+    public static final String LOG_TAG_API_ANSWER = "API_ANSWER";
     
     /**
      * API 错误日志标签

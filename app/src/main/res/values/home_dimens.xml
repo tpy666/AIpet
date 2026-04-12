@@ -12,12 +12,25 @@
     <dimen name="home_stage_corner">24dp</dimen>
     <dimen name="home_panel_corner">14dp</dimen>
 
-    <dimen name="home_side_button_size">62dp</dimen>
+    <dimen name="home_side_button_size">54dp</dimen>
     <dimen name="home_side_column_width">74dp</dimen>
     <dimen name="home_chat_action_size">42dp</dimen>
     <dimen name="home_input_height">40dp</dimen>
     <dimen name="home_chat_bar_height">58dp</dimen>
     <dimen name="home_nav_button_height">78dp</dimen>
+
+    <dimen name="home_page_side_margin">12dp</dimen>
+    <dimen name="home_top_bar_height">44dp</dimen>
+    <dimen name="home_nav_bar_height">44dp</dimen>
+    <dimen name="home_content_height">641.5dp</dimen>
+    <dimen name="home_operate_height">49dp</dimen>
+    <dimen name="home_down_height">34dp</dimen>
+    <dimen name="home_stage_width">280dp</dimen>
+    <dimen name="home_stage_height">680dp</dimen>
+    <dimen name="home_menu_item_width">60dp</dimen>
+    <dimen name="home_menu_item_height">75dp</dimen>
+    <dimen name="home_menu_item_gap">12.5dp</dimen>
+    <dimen name="home_menu_icon_size">22dp</dimen>
 
     <dimen name="home_margin_sm">8dp</dimen>
     <dimen name="home_margin_md">10dp</dimen>

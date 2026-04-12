@@ -22,7 +22,7 @@ import com.example.aipet.data.model.Message;
 import com.example.aipet.data.model.Pet;
 import com.example.aipet.network.ApiClient;
 import com.example.aipet.network.ApiConfig;
-import com.example.aipet.network.AssistantReplyFormatter;
+import com.example.aipet.network.APIAnswer;
 import com.example.aipet.network.ChatRequest;
 import com.example.aipet.network.NetworkConfigBootstrap;
 import com.example.aipet.network.PetPromptBuilder;
@@ -319,13 +319,12 @@ public class ChatActivity extends BaseActivity {
             @Override
             public void onSuccess(String reply) {
                 mainHandler.post(() -> {
-                    AssistantReplyFormatter.FormatResult formatted = AssistantReplyFormatter.format(reply);
-                    chatLogger.logApiResponse(formatted.displayText, 200);
-                    chatLogger.logPetReply(
-                            !formatted.answer.isEmpty() ? formatted.answer : formatted.displayText,
-                            activePet.getName()
-                    );
-                    handleApiReply(formatted.displayText);
+                    APIAnswer apiAnswer = APIAnswer.fromRaw(reply == null ? "" : reply);
+                    String answerOnly = apiAnswer.answerOnly();
+                    chatLogger.logApiResponse(answerOnly, 200);
+                    chatLogger.logApiAnswer(apiAnswer.toLogBlock());
+                    chatLogger.logPetReply(answerOnly, activePet.getName());
+                    handleApiReply(answerOnly);
                     resetSendButton();
                 });
             }

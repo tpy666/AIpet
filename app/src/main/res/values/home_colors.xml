@@ -2,8 +2,8 @@
 <resources>
     <color name="home_chip_red">#D93434</color>
     <color name="home_chip_red_dark">#CC2F2F</color>
-    <color name="home_bubble_green">#A6D63A</color>
-    <color name="home_bubble_text">#2E4A12</color>
+    <color name="home_bubble_green">#80343A40</color>
+    <color name="home_bubble_text">#F3F6FA</color>
     <color name="home_pet_blue">#3383D4</color>
     <color name="home_side_bg">#D9DCE1</color>
     <color name="home_side_icon">#F68D89</color>

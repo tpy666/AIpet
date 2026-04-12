@@ -400,6 +400,13 @@ public class ChatLogger {
     public void logApiResponse(String response, int statusCode) {
         info(Constants.LOG_TAG_API_RESPONSE, "Status: " + statusCode + ", Response: " + response);
     }
+
+    /**
+     * 记录结构化 API 回答（回答 + 深度思考）
+     */
+    public void logApiAnswer(String answerBlock) {
+        info(Constants.LOG_TAG_API_ANSWER, answerBlock);
+    }
     
     /**
      * 记录宠物回复
@@ -432,7 +439,18 @@ public class ChatLogger {
                 Constants.LOG_TAG_USER_MESSAGE,
                 Constants.LOG_TAG_PET_REPLY,
                 Constants.LOG_TAG_API_REQUEST,
-                Constants.LOG_TAG_API_RESPONSE
+                Constants.LOG_TAG_API_RESPONSE,
+                Constants.LOG_TAG_API_ANSWER
+        );
+    }
+
+    public List<LogEntry> getChatLogEntries() {
+        return collectLogsByTags(
+                Constants.LOG_TAG_USER_MESSAGE,
+                Constants.LOG_TAG_PET_REPLY,
+                Constants.LOG_TAG_API_REQUEST,
+                Constants.LOG_TAG_API_RESPONSE,
+                Constants.LOG_TAG_API_ANSWER
         );
     }
     

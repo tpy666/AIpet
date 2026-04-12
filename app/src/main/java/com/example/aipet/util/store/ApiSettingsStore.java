@@ -24,7 +24,11 @@ public class ApiSettingsStore {
         String apiUrl = SPUtils.getString(appContext, Constants.KEY_API_URL, "");
         String apiKey = SPUtils.getString(appContext, Constants.KEY_API_KEY, "");
         String modelName = SPUtils.getString(appContext, Constants.KEY_MODEL_NAME, Constants.OPENAI_DEFAULT_MODEL);
-        return new ApiSettings(provider, apiUrl, apiKey, modelName);
+        String avatarImageUrl = SPUtils.getString(appContext, Constants.KEY_AVATAR_IMAGE_URL, "");
+        String avatarUploadUrl = SPUtils.getString(appContext, Constants.KEY_AVATAR_UPLOAD_URL, "");
+        String avatarRemoveBgUrl = SPUtils.getString(appContext, Constants.KEY_AVATAR_REMOVE_BG_URL, "");
+        boolean avatarAutoProcess = SPUtils.getString(appContext, Constants.KEY_AVATAR_AUTO_PROCESS, "false").equals("true");
+        return new ApiSettings(provider, apiUrl, apiKey, modelName, avatarImageUrl, avatarUploadUrl, avatarRemoveBgUrl, avatarAutoProcess);
     }
 
     public void save(@NonNull ApiSettings settings) {
@@ -32,6 +36,10 @@ public class ApiSettingsStore {
         SPUtils.putString(appContext, Constants.KEY_API_URL, settings.apiUrl);
         SPUtils.putString(appContext, Constants.KEY_API_KEY, settings.apiKey);
         SPUtils.putString(appContext, Constants.KEY_MODEL_NAME, settings.modelName);
+        SPUtils.putString(appContext, Constants.KEY_AVATAR_IMAGE_URL, settings.avatarImageUrl);
+        SPUtils.putString(appContext, Constants.KEY_AVATAR_UPLOAD_URL, settings.avatarUploadUrl);
+        SPUtils.putString(appContext, Constants.KEY_AVATAR_REMOVE_BG_URL, settings.avatarRemoveBgUrl);
+        SPUtils.putString(appContext, Constants.KEY_AVATAR_AUTO_PROCESS, String.valueOf(settings.avatarAutoProcess));
     }
 
     public static class ApiSettings {
@@ -39,12 +47,22 @@ public class ApiSettingsStore {
         public final String apiUrl;
         public final String apiKey;
         public final String modelName;
+        public final String avatarImageUrl;
+        public final String avatarUploadUrl;
+        public final String avatarRemoveBgUrl;
+        public final boolean avatarAutoProcess;
 
-        public ApiSettings(String provider, String apiUrl, String apiKey, String modelName) {
+        public ApiSettings(String provider, String apiUrl, String apiKey, String modelName,
+                           String avatarImageUrl, String avatarUploadUrl, String avatarRemoveBgUrl,
+                           boolean avatarAutoProcess) {
             this.provider = provider;
             this.apiUrl = apiUrl;
             this.apiKey = apiKey;
             this.modelName = modelName;
+            this.avatarImageUrl = avatarImageUrl;
+            this.avatarUploadUrl = avatarUploadUrl;
+            this.avatarRemoveBgUrl = avatarRemoveBgUrl;
+            this.avatarAutoProcess = avatarAutoProcess;
         }
     }
 }
