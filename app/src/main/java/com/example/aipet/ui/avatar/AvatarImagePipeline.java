@@ -1,15 +1,18 @@
 package com.example.aipet.ui.avatar;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.aipet.util.SceneImageLoader;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
@@ -46,18 +49,19 @@ public final class AvatarImagePipeline {
                                          @Nullable String uploadEndpoint,
                                          @Nullable String removeBgEndpoint,
                                          boolean autoProcess,
+                                         boolean preserveOriginal,
                                          long petId,
                                          @NonNull Callback callback) {
         new Thread(() -> {
             try {
-                byte[] originalBytes = downloadBytes(imageUrl);
+                byte[] originalBytes = downloadBytes(context, imageUrl);
                 if (originalBytes == null || originalBytes.length == 0) {
                     callback.onFailure("无法下载图片");
                     return;
                 }
 
                 byte[] finalBytes = originalBytes;
-                if (autoProcess && removeBgEndpoint != null && !removeBgEndpoint.trim().isEmpty()) {
+                if (!preserveOriginal && autoProcess && removeBgEndpoint != null && !removeBgEndpoint.trim().isEmpty()) {
                     byte[] processed = removeBackground(originalBytes, removeBgEndpoint.trim());
                     if (processed != null && processed.length > 0) {
                         finalBytes = processed;
@@ -77,7 +81,10 @@ public final class AvatarImagePipeline {
     }
 
     @Nullable
-    private static byte[] downloadBytes(@NonNull String imageUrl) throws IOException {
+    private static byte[] downloadBytes(@NonNull Context context, @NonNull String imageUrl) throws IOException {
+        if (!imageUrl.startsWith("http://") && !imageUrl.startsWith("https://")) {
+            return loadBytesFromLocalSource(context, imageUrl);
+        }
         Request request = new Request.Builder().url(imageUrl).get().build();
         try (Response response = CLIENT.newCall(request).execute()) {
             if (!response.isSuccessful() || response.body() == null) {
@@ -85,6 +92,17 @@ public final class AvatarImagePipeline {
             }
             return response.body().bytes();
         }
+    }
+
+    @Nullable
+    private static byte[] loadBytesFromLocalSource(@NonNull Context context, @NonNull String imageSource) {
+        Bitmap bitmap = SceneImageLoader.loadBitmap(context, imageSource);
+        if (bitmap == null) {
+            return null;
+        }
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+        return outputStream.toByteArray();
     }
 
     @Nullable

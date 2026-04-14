@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.example.aipet.util.store.ApiSettingsStore;
+import com.example.aipet.util.store.OutingBackgroundStore;
 import com.example.aipet.util.store.PetStore;
 
 /**
@@ -28,5 +29,9 @@ public final class UtilHub {
 
     public static ApiSettingsStore apiSettingsStore(@NonNull Context context) {
         return new ApiSettingsStore(context);
+    }
+
+    public static OutingBackgroundStore outingBackgroundStore(@NonNull Context context) {
+        return new OutingBackgroundStore(context);
     }
 }

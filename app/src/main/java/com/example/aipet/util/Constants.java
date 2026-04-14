@@ -76,6 +76,21 @@ public class Constants {
      * 是否自动去背并上传
      */
     public static final String KEY_AVATAR_AUTO_PROCESS = "avatar_auto_process";
+
+    /**
+     * 是否保留原图，不进行去背
+     */
+    public static final String KEY_AVATAR_PRESERVE_ORIGINAL = "avatar_preserve_original";
+
+    /**
+     * 外出背景配置列表
+     */
+    public static final String KEY_OUTING_BACKGROUND_LIST = "outing_background_list";
+
+    /**
+     * 换装配置列表
+     */
+    public static final String KEY_DRESS_UP_ITEMS = "dress_up_items";
     
     // ============ API 端点 URL ============
     

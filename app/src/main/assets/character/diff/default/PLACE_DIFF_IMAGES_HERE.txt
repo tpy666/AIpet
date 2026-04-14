@@ -1,0 +1,2 @@
+Put default outfit expression diff images in emotion subfolders.
+Example: normal/default__exp_normal__v001.png

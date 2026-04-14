@@ -1,0 +1,2 @@
+Put formal outfit expression diff images in emotion subfolders.
+Example: sad/formal__exp_sad__v001.png

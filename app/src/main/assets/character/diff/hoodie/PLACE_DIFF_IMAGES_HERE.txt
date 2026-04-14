@@ -1,0 +1,2 @@
+Put hoodie outfit expression diff images in emotion subfolders.
+Example: happy/hoodie__exp_happy__v001.png

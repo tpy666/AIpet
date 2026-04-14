@@ -4,6 +4,9 @@ import android.Manifest;
 import android.content.Intent;
 import android.net.Uri;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -14,6 +17,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -25,6 +29,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -39,10 +44,13 @@ import com.example.aipet.network.APIAnswer;
 import com.example.aipet.network.ChatRequest;
 import com.example.aipet.network.NetworkConfigBootstrap;
 import com.example.aipet.network.PetPromptBuilder;
+import com.example.aipet.ui.avatar.AvatarDiffStore;
+import com.example.aipet.ui.avatar.AvatarExpressionResolver;
 import com.example.aipet.ui.navigation.UiNavigator;
 import com.example.aipet.util.ChatLogger;
 import com.example.aipet.util.Constants;
 import com.example.aipet.util.SPUtils;
+import com.example.aipet.util.SceneImageLoader;
 import com.example.aipet.util.UtilHub;
 import com.example.aipet.util.AffectionHistoryStore;
 import com.example.aipet.util.store.PetStore;
@@ -55,6 +63,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -70,6 +79,7 @@ import okhttp3.Response;
  */
 public class MainActivity extends BaseActivity {
 
+    private static final String TAG = "MainActivity";
     private static final int REQUEST_LOCATION_PERMISSION = 101;
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm", Locale.CHINA);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("M月d日", Locale.CHINA);
@@ -81,14 +91,21 @@ public class MainActivity extends BaseActivity {
     private final Handler clockHandler = new Handler(Looper.getMainLooper());
     private final List<RecentChatItem> recentChats = new ArrayList<>();
     private final int[] stageBackgrounds = {
-            R.drawable.bg_screen_atmosphere,
-            R.drawable.bg_home_outing
+            R.drawable.outside_city_park,
+            R.drawable.outside_seaside_boardwalk,
+            R.drawable.outside_pet_district
     };
     private final List<OutfitItem> outfitCatalog = new ArrayList<>();
     private final OkHttpClient weatherHttpClient = new OkHttpClient();
+        private final OkHttpClient outingBackgroundHttpClient = new OkHttpClient.Builder()
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .build();
     private final ExecutorService ioExecutor = Executors.newSingleThreadExecutor();
 
     private View rootLayout;
+    private ImageView ivMainBackground;
+    private ImageView ivStageBackground;
     private LinearLayout recentPanel;
     private LinearLayout topReplyBubbleContainer;
     private LinearLayout petSwitchListLayout;
@@ -101,7 +118,6 @@ public class MainActivity extends BaseActivity {
     private TextView tvDate;
     private TextView tvMeta;
     private TextView tvCurrentPetChip;
-    private TextView tvPetName;
     private TextView tvPetAvatarPlaceholder;
     private ImageView ivPetAvatar;
     private EditText etHomeInput;
@@ -117,7 +133,7 @@ public class MainActivity extends BaseActivity {
     private Pet activePet;
     private int affectionValue = 50;
     private int noticeCount = 0;
-    private int stageBackgroundIndex = 0;
+    private int stageBackgroundIndex = -1;
     private long lastWeatherUpdateAt = 0L;
     private String latestWeatherText = "天气加载中...";
     private String currentCityName = "定位中";
@@ -154,6 +170,7 @@ public class MainActivity extends BaseActivity {
         NetworkConfigBootstrap.syncFromStorage(this);
 
         bindViews();
+        applyFallbackOutingBackground();
         initTextToSpeech();
         initOutfitCatalog();
         loadActivePet();
@@ -167,8 +184,16 @@ public class MainActivity extends BaseActivity {
         clockHandler.post(clockRunnable);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadActivePet();
+    }
+
     private void bindViews() {
         rootLayout = bind(R.id.main_root);
+        ivMainBackground = bind(R.id.iv_main_background);
+        ivStageBackground = bind(R.id.layout_content_slot);
         recentPanel = bind(R.id.layout_recent_chat_panel);
         topReplyBubbleContainer = bind(R.id.layout_top_reply_bubbles);
         petSwitchListLayout = bind(R.id.layout_pet_switch_list);
@@ -181,7 +206,6 @@ public class MainActivity extends BaseActivity {
         recentScrollView = bind(R.id.sv_recent_chat);
         recentFullscreenScrollView = bind(R.id.sv_recent_chat_fullscreen);
         recentFullscreenLayout = bind(R.id.layout_recent_fullscreen);
-        tvPetName = bind(R.id.tv_pet_name);
         ivPetAvatar = bind(R.id.iv_pet_avatar);
         tvPetAvatarPlaceholder = bind(R.id.tv_pet_avatar_placeholder);
         etHomeInput = bind(R.id.et_home_input);
@@ -546,6 +570,7 @@ public class MainActivity extends BaseActivity {
                     String answerOnly = apiAnswer.answerOnly();
 
                     appendRecentChat(RecentChatRole.PET, answerOnly);
+                    updateAvatarExpressionByReply(answerOnly);
                     addTopReplyBubble(answerOnly);
                     speakText(answerOnly);
 
@@ -634,6 +659,7 @@ public class MainActivity extends BaseActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         params.topMargin = dpToPx(8);
+        params.gravity = android.view.Gravity.CENTER_HORIZONTAL;
         bubbleView.setLayoutParams(params);
         if (animateIn) {
             bubbleView.setAlpha(0f);
@@ -843,26 +869,23 @@ public class MainActivity extends BaseActivity {
         if (result.getResultCode() != RESULT_OK || result.getData() == null) {
             return;
         }
-        if (activePet == null) {
-            showToast(getString(R.string.chat_no_role_bound));
-            return;
-        }
 
         Intent data = result.getData();
-        String outfitId = data.getStringExtra(StoreActivity.EXTRA_STORE_ITEM_ID);
-        String outfitName = data.getStringExtra(StoreActivity.EXTRA_STORE_ITEM_NAME);
+        String itemName = data.getStringExtra(StoreActivity.EXTRA_STORE_ITEM_NAME);
         int delta = data.getIntExtra(StoreActivity.EXTRA_STORE_AFFECTION_DELTA, 3);
+        handleStoreItemPurchase(itemName, delta);
+    }
 
-        OutfitItem item = findOutfitById(outfitId);
-        if (item == null) {
-            item = findOutfitByName(outfitName);
-        }
-        if (item == null) {
-            showToast("未识别的服饰选择");
-            return;
-        }
-
-        handleShopSelectionWithDelta(item, delta);
+    private void handleStoreItemPurchase(@Nullable String itemName, int affectionDelta) {
+        String finalName = TextUtils.isEmpty(itemName) ? "道具" : itemName;
+        int finalDelta = Math.max(1, affectionDelta);
+        affectionValue = Math.min(100, affectionValue + finalDelta);
+        AffectionHistoryStore.append(this, "商店道具", finalDelta);
+        noticeCount += 1;
+        updateAffectionBubble();
+        updateNoticeBubble();
+        appendRecentChat(RecentChatRole.SYSTEM, "购买并使用了「" + finalName + "」，好感度 +" + finalDelta);
+        showToast("购买成功，好感 +" + finalDelta);
     }
 
     private void onFeedResult(ActivityResult result) {
@@ -890,17 +913,39 @@ public class MainActivity extends BaseActivity {
 
         Intent data = result.getData();
         String place = data.getStringExtra(OutingActivity.EXTRA_OUTING_PLACE);
+        String environment = data.getStringExtra(OutingActivity.EXTRA_OUTING_ENVIRONMENT);
+        String imageUrl = data.getStringExtra(OutingActivity.EXTRA_OUTING_IMAGE_URL);
         int delta = data.getIntExtra(OutingActivity.EXTRA_OUTING_AFFECTION_DELTA, 4);
 
-        stageBackgroundIndex = (stageBackgroundIndex + 1) % stageBackgrounds.length;
-        rootLayout.setBackgroundResource(stageBackgrounds[stageBackgroundIndex]);
+        applyOutingBackground(imageUrl);
         affectionValue = Math.min(100, affectionValue + delta);
         AffectionHistoryStore.append(this, "外出", delta);
         noticeCount += 1;
         updateAffectionBubble();
         updateNoticeBubble();
-        appendRecentChat(RecentChatRole.SYSTEM, "去了「" + (place == null ? "外出地点" : place) + "」，好感度 +" + delta);
+        StringBuilder summary = new StringBuilder();
+        summary.append("去了「").append(place == null ? "外出地点" : place).append("」");
+        if (!TextUtils.isEmpty(environment)) {
+            summary.append("，环境：").append(environment);
+        }
+        summary.append("，好感度 +").append(delta);
+        appendRecentChat(RecentChatRole.SYSTEM, summary.toString());
         showToast("外出完成，好感 +" + delta);
+    }
+
+    private void applyOutingBackground(@Nullable String imageUrl) {
+        if (TextUtils.isEmpty(imageUrl)) {
+            applyFallbackOutingBackground();
+            return;
+        }
+        SceneImageLoader.loadInto(ivMainBackground, imageUrl, stageBackgrounds[stageBackgroundIndex]);
+    }
+
+    private void applyFallbackOutingBackground() {
+        stageBackgroundIndex = (stageBackgroundIndex + 1) % stageBackgrounds.length;
+        if (ivMainBackground != null) {
+            ivMainBackground.setImageResource(stageBackgrounds[stageBackgroundIndex]);
+        }
     }
 
     private OutfitItem findOutfitByName(String name) {
@@ -939,13 +984,12 @@ public class MainActivity extends BaseActivity {
     }
 
     private void applyOutfit(@NonNull OutfitItem outfitItem) {
-        ivPetAvatar.setImageResource(outfitItem.imageResId);
+        applyExpressionForOutfit(outfitItem.id, null, outfitItem.imageResId, AvatarExpressionResolver.EMOTION_NORMAL);
         tvPetAvatarPlaceholder.setVisibility(View.GONE);
         if (activePet != null) {
             activePet.setAvatar("outfit:" + outfitItem.id);
             activePet.setAppearance(outfitItem.appearanceDesc);
             petStore.updatePet(activePet);
-            tvPetName.setText(String.format(Locale.CHINA, "宠物: %s（%s）", activePet.getName(), outfitItem.name));
         }
     }
 
@@ -960,7 +1004,8 @@ public class MainActivity extends BaseActivity {
         List<Pet> pets = petStore.getAllPets();
         if (pets.isEmpty()) {
             activePet = null;
-            tvPetName.setText("宠物: 未创建");
+            ivPetAvatar.setImageDrawable(null);
+            tvPetAvatarPlaceholder.setVisibility(View.GONE);
             return;
         }
 
@@ -982,50 +1027,107 @@ public class MainActivity extends BaseActivity {
 
     private void applySavedOutfit() {
         if (activePet == null) {
-            ivPetAvatar.setImageResource(R.drawable.ic_pet_avatar_placeholder);
-            tvPetAvatarPlaceholder.setVisibility(View.VISIBLE);
+            ivPetAvatar.setImageDrawable(null);
+            tvPetAvatarPlaceholder.setVisibility(View.GONE);
             return;
         }
 
         String avatarValue = activePet.getAvatar();
         if (isCustomAvatar(avatarValue)) {
             applyCustomAvatar(avatarValue);
-            tvPetName.setText(String.format(Locale.CHINA, "宠物: %s", activePet.getName()));
             return;
         }
 
         String outfitId = parseOutfitId(activePet.getAvatar());
+        String baseImageSource = findDressOutfitImageSourceById(outfitId);
         OutfitItem selected = findOutfitById(outfitId);
+        int fallbackResId = R.drawable.ic_outfit;
         if (selected == null) {
-            selected = outfitCatalog.get(0);
-            unlockOutfit(activePet.getId(), selected.id);
-            activePet.setAvatar("outfit:" + selected.id);
-            activePet.setAppearance(selected.appearanceDesc);
-            petStore.updatePet(activePet);
+            if (TextUtils.isEmpty(baseImageSource)) {
+                selected = outfitCatalog.get(0);
+                unlockOutfit(activePet.getId(), selected.id);
+                activePet.setAvatar("outfit:" + selected.id);
+                activePet.setAppearance(selected.appearanceDesc);
+                petStore.updatePet(activePet);
+                outfitId = selected.id;
+                baseImageSource = findDressOutfitImageSourceById(outfitId);
+                fallbackResId = selected.imageResId;
+            }
+        } else {
+            fallbackResId = selected.imageResId;
         }
 
-        ivPetAvatar.setImageResource(selected.imageResId);
+        applyExpressionForOutfit(outfitId, baseImageSource, fallbackResId, AvatarExpressionResolver.EMOTION_NORMAL);
         tvPetAvatarPlaceholder.setVisibility(View.GONE);
-        tvPetName.setText(String.format(Locale.CHINA, "宠物: %s（%s）", activePet.getName(), selected.name));
     }
 
     private boolean isCustomAvatar(String avatarValue) {
         return !TextUtils.isEmpty(avatarValue)
-                && (avatarValue.startsWith("local:") || avatarValue.startsWith("remote:"));
+                && (avatarValue.startsWith("local:")
+                || avatarValue.startsWith("remote:")
+                || avatarValue.startsWith("content://")
+                || avatarValue.startsWith("file://")
+                || avatarValue.startsWith("asset:")
+                || avatarValue.startsWith("res:")
+                || avatarValue.startsWith("http://")
+                || avatarValue.startsWith("https://"));
     }
 
     private void applyCustomAvatar(@NonNull String avatarValue) {
-        if (avatarValue.startsWith("local:")) {
-            String uriText = avatarValue.substring("local:".length());
-            try {
-                ivPetAvatar.setImageURI(Uri.parse(uriText));
-            } catch (Exception e) {
-                ivPetAvatar.setImageResource(R.drawable.ic_pet_avatar_placeholder);
+        SceneImageLoader.loadInto(ivPetAvatar, avatarValue, 0);
+        tvPetAvatarPlaceholder.setVisibility(View.GONE);
+    }
+
+    private void updateAvatarExpressionByReply(@NonNull String replyText) {
+        if (activePet == null) {
+            return;
+        }
+        String avatarValue = activePet.getAvatar();
+        if (isCustomAvatar(avatarValue)) {
+            return;
+        }
+        String outfitId = parseOutfitId(avatarValue);
+        String baseImageSource = findDressOutfitImageSourceById(outfitId);
+        OutfitItem outfit = findOutfitById(outfitId);
+        int fallbackResId = R.drawable.ic_outfit;
+        if (outfit == null) {
+            if (TextUtils.isEmpty(baseImageSource)) {
+                outfit = outfitCatalog.get(0);
+                outfitId = outfit.id;
+                baseImageSource = findDressOutfitImageSourceById(outfitId);
+                fallbackResId = outfit.imageResId;
             }
         } else {
-            ivPetAvatar.setImageResource(R.drawable.ic_pet_avatar_placeholder);
+            fallbackResId = outfit.imageResId;
         }
-        tvPetAvatarPlaceholder.setVisibility(View.GONE);
+
+        String emotionTag = AvatarExpressionResolver.resolveEmotionTag(replyText);
+        applyExpressionForOutfit(outfitId, baseImageSource, fallbackResId, emotionTag);
+    }
+
+    private void applyExpressionForOutfit(@NonNull String outfitId,
+                                          @Nullable String baseImageSource,
+                                          int fallbackResId,
+                                          @NonNull String emotionTag) {
+        String diffSource = AvatarDiffStore.resolveDiffSource(this, outfitId, emotionTag);
+        SceneImageLoader.loadInto(ivPetAvatar, diffSource, baseImageSource, fallbackResId);
+    }
+
+    @Nullable
+    private String findDressOutfitImageSourceById(@Nullable String outfitId) {
+        if (TextUtils.isEmpty(outfitId)) {
+            return null;
+        }
+        List<DressUpOutfitSnapshot> outfits = SPUtils.getList(this, Constants.KEY_DRESS_UP_ITEMS, DressUpOutfitSnapshot.class);
+        if (outfits == null || outfits.isEmpty()) {
+            return null;
+        }
+        for (DressUpOutfitSnapshot item : outfits) {
+            if (item != null && outfitId.equals(item.id) && !TextUtils.isEmpty(item.imageSource)) {
+                return item.imageSource;
+            }
+        }
+        return null;
     }
 
     @NonNull
@@ -1151,6 +1253,11 @@ public class MainActivity extends BaseActivity {
             this.imageResId = imageResId;
             this.price = price;
         }
+    }
+
+    private static class DressUpOutfitSnapshot {
+        public String id;
+        public String imageSource;
     }
 
     private enum RecentChatRole {

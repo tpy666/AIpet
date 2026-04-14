@@ -1,9 +1,13 @@
 package com.example.aipet.ui.activity;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -13,21 +17,29 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.aipet.R;
 import com.example.aipet.data.model.Pet;
 import com.example.aipet.network.ApiClient;
 import com.example.aipet.network.ApiConfig;
 import com.example.aipet.network.request.ApiConnectionTester;
+import com.example.aipet.ui.avatar.AvatarDiffStore;
 import com.example.aipet.ui.avatar.AvatarImagePipeline;
 import com.example.aipet.ui.navigation.UiNavigator;
 import com.example.aipet.util.Constants;
 import com.example.aipet.util.SPUtils;
 import com.example.aipet.util.UtilHub;
 import com.example.aipet.util.store.ApiSettingsStore;
+import com.example.aipet.util.store.OutingBackgroundStore;
 import com.example.aipet.util.store.PetStore;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -39,6 +51,7 @@ public class SettingsActivity extends BaseActivity {
     public static final String EXTRA_OPEN_SECTION = "extra_open_section";
     private static final String SECTION_ROLE = "role";
     private static final String SECTION_IMAGE = "image";
+    private static final String SECTION_OUTING = "outing";
     private static final String SECTION_API = "api";
     private static final String SECTION_LOG = "log";
 
@@ -50,6 +63,11 @@ public class SettingsActivity extends BaseActivity {
     private EditText etAvatarUploadEndpoint;
     private EditText etAvatarRemoveBgEndpoint;
     private CheckBox cbAvatarAutoProcess;
+    private CheckBox cbAvatarPreserveOriginal;
+    private EditText etOutingBgPlaceName;
+    private EditText etOutingBgEnvironment;
+    private EditText etOutingBgImageUrl;
+    private EditText etOutingBgDelta;
     private Button btnSave;
     private Button btnTest;
     private Button btnReset;
@@ -58,28 +76,49 @@ public class SettingsActivity extends BaseActivity {
     private Button btnCreatePetCard;
     private Button btnManagePetCards;
     private Button btnApplyAvatar;
+    private Button btnPickAvatarImage;
+    private Button btnPickAvatarFromAssets;
+    private Button btnSelectDiffOutfit;
+    private Button btnUploadAvatarDiff;
+    private Button btnAddOutingBackground;
+    private Button btnPickOutingBackgroundImage;
     private Button btnHelpPage;
     private Button btnDressUpPage;
     private TextView tvStatus;
     private TextView tvAvatarStatus;
+    private TextView tvOutingStatus;
     private TextView tvApiFoldToggle;
     private TextView tvRoleFoldToggle;
     private TextView tvImageFoldToggle;
+    private TextView tvOutingFoldToggle;
     private TextView tvLogFoldToggle;
     private View layoutRoleHeader;
     private View layoutRoleContent;
     private View layoutImageHeader;
     private View layoutImageContent;
+    private View layoutOutingHeader;
+    private View layoutOutingContent;
     private View layoutApiHeader;
     private View layoutApiContent;
     private View layoutLogHeader;
     private View layoutLogContent;
+    private RecyclerView rvOutingBackgrounds;
 
     private ApiSettingsStore settingsStore;
+    private OutingBackgroundStore outingBackgroundStore;
     private PetStore petStore;
+    private OutingBackgroundAdapter outingBackgroundAdapter;
+    private ActivityResultLauncher<String[]> outingBackgroundPickerLauncher;
+    private ActivityResultLauncher<String[]> avatarPickerLauncher;
+    private ActivityResultLauncher<String[]> avatarDiffPickerLauncher;
+    private String selectedDiffOutfitId;
+    private String selectedDiffOutfitName;
+    private String pendingDiffOutfitId;
+    private String pendingDiffEmotion;
     private boolean suppressProviderChange;
     private boolean roleExpanded;
     private boolean imageExpanded;
+    private boolean outingExpanded;
     private boolean apiExpanded;
     private boolean logExpanded;
 
@@ -90,7 +129,20 @@ public class SettingsActivity extends BaseActivity {
         setupScreen(getString(R.string.settings_title), true);
 
         settingsStore = UtilHub.apiSettingsStore(this);
+        outingBackgroundStore = UtilHub.outingBackgroundStore(this);
         petStore = UtilHub.petStore(this);
+        avatarPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(),
+            this::onAvatarImagePicked
+        );
+        outingBackgroundPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(),
+            this::onOutingBackgroundPicked
+        );
+        avatarDiffPickerLauncher = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(),
+            this::onAvatarDiffImagePicked
+        );
         initViews();
         loadSettings();
         openRequestedSection();
@@ -105,6 +157,11 @@ public class SettingsActivity extends BaseActivity {
         etAvatarUploadEndpoint = bind(R.id.et_avatar_upload_endpoint);
         etAvatarRemoveBgEndpoint = bind(R.id.et_avatar_remove_bg_endpoint);
         cbAvatarAutoProcess = bind(R.id.cb_avatar_auto_process);
+        cbAvatarPreserveOriginal = bind(R.id.cb_avatar_preserve_original);
+        etOutingBgPlaceName = bind(R.id.et_outing_bg_place_name);
+        etOutingBgEnvironment = bind(R.id.et_outing_bg_environment);
+        etOutingBgImageUrl = bind(R.id.et_outing_bg_image_url);
+        etOutingBgDelta = bind(R.id.et_outing_bg_delta);
         btnSave = bind(R.id.btn_save);
         btnTest = bind(R.id.btn_test);
         btnReset = bind(R.id.btn_reset);
@@ -113,25 +170,41 @@ public class SettingsActivity extends BaseActivity {
         btnCreatePetCard = bind(R.id.btn_create_pet_card);
         btnManagePetCards = bind(R.id.btn_manage_pet_cards);
         btnApplyAvatar = bind(R.id.btn_apply_avatar);
+        btnPickAvatarImage = bind(R.id.btn_pick_avatar_image);
+        btnPickAvatarFromAssets = bind(R.id.btn_pick_avatar_asset);
+        btnSelectDiffOutfit = bind(R.id.btn_select_avatar_diff_outfit);
+        btnUploadAvatarDiff = bind(R.id.btn_upload_avatar_diff);
+        btnPickOutingBackgroundImage = bind(R.id.btn_pick_outing_bg_image);
+        btnAddOutingBackground = bind(R.id.btn_add_outing_background);
         btnHelpPage = bind(R.id.btn_help_page);
         btnDressUpPage = bind(R.id.btn_dress_up_page);
         tvStatus = bind(R.id.tv_status);
         tvAvatarStatus = bind(R.id.tv_avatar_status);
+        tvOutingStatus = bind(R.id.tv_outing_status);
         tvRoleFoldToggle = bind(R.id.tv_role_card_toggle);
         tvImageFoldToggle = bind(R.id.tv_image_toggle);
+        tvOutingFoldToggle = bind(R.id.tv_outing_toggle);
         tvApiFoldToggle = bind(R.id.tv_api_toggle);
         tvLogFoldToggle = bind(R.id.tv_log_toggle);
         layoutRoleHeader = bind(R.id.layout_role_card_header);
         layoutRoleContent = bind(R.id.layout_role_card_content);
         layoutImageHeader = bind(R.id.layout_image_header);
         layoutImageContent = bind(R.id.layout_image_content);
+        layoutOutingHeader = bind(R.id.layout_outing_header);
+        layoutOutingContent = bind(R.id.layout_outing_content);
         layoutApiHeader = bind(R.id.layout_api_header);
         layoutApiContent = bind(R.id.layout_api_content);
         layoutLogHeader = bind(R.id.layout_log_header);
         layoutLogContent = bind(R.id.layout_log_content);
+        rvOutingBackgrounds = bind(R.id.rv_outing_backgrounds);
+
+        rvOutingBackgrounds.setLayoutManager(new LinearLayoutManager(this));
+        outingBackgroundAdapter = new OutingBackgroundAdapter(new ArrayList<>(), this::removeOutingBackground);
+        rvOutingBackgrounds.setAdapter(outingBackgroundAdapter);
 
         layoutRoleHeader.setOnClickListener(v -> setSectionExpanded(SECTION_ROLE, !roleExpanded));
         layoutImageHeader.setOnClickListener(v -> setSectionExpanded(SECTION_IMAGE, !imageExpanded));
+        layoutOutingHeader.setOnClickListener(v -> setSectionExpanded(SECTION_OUTING, !outingExpanded));
         layoutApiHeader.setOnClickListener(v -> setSectionExpanded(SECTION_API, !apiExpanded));
         layoutLogHeader.setOnClickListener(v -> setSectionExpanded(SECTION_LOG, !logExpanded));
 
@@ -151,6 +224,91 @@ public class SettingsActivity extends BaseActivity {
         btnTest.setOnClickListener(v -> testConnection());
         btnReset.setOnClickListener(v -> resetToDefaults());
         btnApplyAvatar.setOnClickListener(v -> applyAvatarFromSettings());
+        btnPickAvatarImage.setOnClickListener(v -> pickAvatarImage());
+        btnPickAvatarFromAssets.setOnClickListener(v -> pickAvatarFromAssetsFolder());
+        btnSelectDiffOutfit.setOnClickListener(v -> selectDiffOutfit());
+        btnUploadAvatarDiff.setOnClickListener(v -> uploadAvatarDiff());
+        btnPickOutingBackgroundImage.setOnClickListener(v -> pickOutingBackgroundImage());
+        btnAddOutingBackground.setOnClickListener(v -> addOutingBackground());
+    }
+
+    private void selectDiffOutfit() {
+        List<DressOutfitSnapshot> outfits = SPUtils.getList(this, Constants.KEY_DRESS_UP_ITEMS, DressOutfitSnapshot.class);
+        if (outfits == null || outfits.isEmpty()) {
+            showToast(getString(R.string.settings_diff_no_outfit));
+            return;
+        }
+        CharSequence[] names = new CharSequence[outfits.size()];
+        for (int i = 0; i < outfits.size(); i++) {
+            DressOutfitSnapshot item = outfits.get(i);
+            names[i] = item == null || TextUtils.isEmpty(item.name) ? "未命名服装" : item.name;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.settings_diff_pick_outfit)
+                .setItems(names, (dialog, which) -> {
+                    DressOutfitSnapshot item = outfits.get(which);
+                    if (item == null || TextUtils.isEmpty(item.id)) {
+                        showToast(getString(R.string.settings_diff_no_outfit));
+                        return;
+                    }
+                    selectedDiffOutfitId = item.id;
+                    selectedDiffOutfitName = TextUtils.isEmpty(item.name) ? item.id : item.name;
+                    AvatarDiffStore.ensurePlaceholders(this, selectedDiffOutfitId);
+                    tvAvatarStatus.setText(getString(R.string.settings_diff_selected_outfit, selectedDiffOutfitName));
+                })
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show();
+    }
+
+    private void uploadAvatarDiff() {
+        if (TextUtils.isEmpty(selectedDiffOutfitId)) {
+            showSelectOutfitRequiredDialog();
+            return;
+        }
+        String[] labels = AvatarDiffStore.supportedEmotionLabels();
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.settings_diff_pick_emotion)
+                .setItems(labels, (dialog, which) -> {
+                    pendingDiffOutfitId = selectedDiffOutfitId;
+                    pendingDiffEmotion = AvatarDiffStore.emotionTagFromIndex(which);
+                    if (avatarDiffPickerLauncher != null) {
+                        avatarDiffPickerLauncher.launch(new String[]{"image/*"});
+                    }
+                })
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show();
+    }
+
+    private void onAvatarDiffImagePicked(@Nullable Uri uri) {
+        if (uri == null) {
+            return;
+        }
+        if (TextUtils.isEmpty(pendingDiffOutfitId) || TextUtils.isEmpty(pendingDiffEmotion)) {
+            showSelectOutfitRequiredDialog();
+            return;
+        }
+        try {
+            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (Exception ignored) {
+        }
+        boolean saved = AvatarDiffStore.saveDiffImage(this, pendingDiffOutfitId, pendingDiffEmotion, uri);
+        if (saved) {
+            tvAvatarStatus.setText(getString(
+                    R.string.settings_diff_upload_success,
+                    TextUtils.isEmpty(selectedDiffOutfitName) ? pendingDiffOutfitId : selectedDiffOutfitName,
+                    pendingDiffEmotion
+            ));
+        } else {
+            showToast(getString(R.string.settings_diff_upload_failed));
+        }
+    }
+
+    private void showSelectOutfitRequiredDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.settings_diff_need_outfit_title)
+                .setMessage(R.string.settings_diff_need_outfit_message)
+                .setPositiveButton(R.string.settings_diff_need_outfit_confirm, null)
+                .show();
     }
 
     private void openRequestedSection() {
@@ -170,6 +328,10 @@ public class SettingsActivity extends BaseActivity {
             imageExpanded = expanded;
             layoutImageContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
             tvImageFoldToggle.setText(expanded ? R.string.settings_collapse : R.string.settings_expand);
+        } else if (SECTION_OUTING.equals(section)) {
+            outingExpanded = expanded;
+            layoutOutingContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
+            tvOutingFoldToggle.setText(expanded ? R.string.settings_collapse : R.string.settings_expand);
         } else if (SECTION_API.equals(section)) {
             apiExpanded = expanded;
             layoutApiContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
@@ -239,8 +401,10 @@ public class SettingsActivity extends BaseActivity {
             etAvatarUploadEndpoint.setText(settings.avatarUploadUrl);
             etAvatarRemoveBgEndpoint.setText(settings.avatarRemoveBgUrl);
             cbAvatarAutoProcess.setChecked(settings.avatarAutoProcess);
+            cbAvatarPreserveOriginal.setChecked(settings.avatarPreserveOriginal);
             onProviderChanged(checkedId, false);
             tvAvatarStatus.setText("图片设置已加载");
+            refreshOutingBackgrounds();
         } finally {
             suppressProviderChange = false;
         }
@@ -268,6 +432,7 @@ public class SettingsActivity extends BaseActivity {
             String avatarUploadUrl = etAvatarUploadEndpoint.getText().toString().trim();
             String avatarRemoveBgUrl = etAvatarRemoveBgEndpoint.getText().toString().trim();
             boolean autoProcess = cbAvatarAutoProcess.isChecked();
+            boolean preserveOriginal = cbAvatarPreserveOriginal.isChecked();
 
             int checkedId = rgApiProvider.getCheckedRadioButtonId();
             String provider = resolveProviderValue(checkedId);
@@ -295,7 +460,8 @@ public class SettingsActivity extends BaseActivity {
                     avatarImageUrl,
                     avatarUploadUrl,
                     avatarRemoveBgUrl,
-                    autoProcess
+                        autoProcess,
+                        preserveOriginal
             ));
 
             try {
@@ -417,6 +583,7 @@ public class SettingsActivity extends BaseActivity {
         etAvatarUploadEndpoint.setText("");
         etAvatarRemoveBgEndpoint.setText("");
         cbAvatarAutoProcess.setChecked(false);
+        cbAvatarPreserveOriginal.setChecked(false);
         tvStatus.setText("✓ 已重置为默认设置");
         tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_blue_dark));
     }
@@ -440,6 +607,7 @@ public class SettingsActivity extends BaseActivity {
         String uploadEndpoint = etAvatarUploadEndpoint.getText().toString().trim();
         String removeBgEndpoint = etAvatarRemoveBgEndpoint.getText().toString().trim();
         boolean autoProcess = cbAvatarAutoProcess.isChecked();
+        boolean preserveOriginal = cbAvatarPreserveOriginal.isChecked();
 
         AvatarImagePipeline.processRemoteImage(
                 this,
@@ -447,6 +615,7 @@ public class SettingsActivity extends BaseActivity {
                 uploadEndpoint,
                 removeBgEndpoint,
                 autoProcess,
+                preserveOriginal,
                 activePet.getId(),
                 new AvatarImagePipeline.Callback() {
                     @Override
@@ -470,6 +639,131 @@ public class SettingsActivity extends BaseActivity {
                     }
                 }
         );
+    }
+
+    private void refreshOutingBackgrounds() {
+        List<OutingBackgroundStore.Entry> entries = outingBackgroundStore.loadAll();
+        outingBackgroundAdapter.submit(entries);
+        updateOutingBackgroundStatus(entries.size());
+    }
+
+    private void addOutingBackground() {
+        String placeName = etOutingBgPlaceName.getText().toString().trim();
+        String environment = etOutingBgEnvironment.getText().toString().trim();
+        String imageUrl = etOutingBgImageUrl.getText().toString().trim();
+        String deltaText = etOutingBgDelta.getText().toString().trim();
+
+        if (TextUtils.isEmpty(placeName)) {
+            showToast("请填写外出地点名称");
+            return;
+        }
+        if (TextUtils.isEmpty(environment)) {
+            showToast("请填写环境描述");
+            return;
+        }
+
+        int affectionDelta = 4;
+        if (!TextUtils.isEmpty(deltaText)) {
+            try {
+                affectionDelta = Integer.parseInt(deltaText);
+            } catch (NumberFormatException e) {
+                showToast("好感增量请输入整数");
+                return;
+            }
+        }
+
+        OutingBackgroundStore.Entry entry = new OutingBackgroundStore.Entry(
+                System.currentTimeMillis(),
+                placeName,
+                environment,
+                imageUrl,
+                affectionDelta
+        );
+        outingBackgroundStore.add(entry);
+        etOutingBgPlaceName.setText("");
+        etOutingBgEnvironment.setText("");
+        etOutingBgImageUrl.setText("");
+        etOutingBgDelta.setText("");
+        refreshOutingBackgrounds();
+        showToast("外出背景已添加");
+    }
+
+    private void removeOutingBackground(long id) {
+        if (outingBackgroundStore.removeById(id)) {
+            refreshOutingBackgrounds();
+            showToast("外出背景已删除");
+        }
+    }
+
+    private void updateOutingBackgroundStatus(int count) {
+        if (count <= 0) {
+            tvOutingStatus.setText(R.string.settings_outing_bg_empty);
+            return;
+        }
+        tvOutingStatus.setText(getString(R.string.settings_outing_bg_count_format, count));
+    }
+
+    private void pickOutingBackgroundImage() {
+        if (outingBackgroundPickerLauncher == null) {
+            showToast("图片选择器未初始化");
+            return;
+        }
+        outingBackgroundPickerLauncher.launch(new String[]{"image/*"});
+    }
+
+    private void pickAvatarImage() {
+        if (avatarPickerLauncher == null) {
+            showToast("角色图选择器未初始化");
+            return;
+        }
+        avatarPickerLauncher.launch(new String[]{"image/*"});
+    }
+
+    private void onAvatarImagePicked(@Nullable Uri uri) {
+        if (uri == null) {
+            return;
+        }
+        try {
+            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (Exception ignored) {
+        }
+        etAvatarImageUrl.setText(uri.toString());
+        tvAvatarStatus.setText(getString(R.string.settings_avatar_local_import_ok));
+    }
+
+    private void pickAvatarFromAssetsFolder() {
+        try {
+            String[] files = getAssets().list("character");
+            if (files == null || files.length == 0) {
+                showToast(getString(R.string.settings_avatar_asset_empty));
+                return;
+            }
+            new AlertDialog.Builder(this)
+                .setTitle(R.string.settings_avatar_asset_pick_title)
+                .setItems(files, (dialog, which) -> {
+                    String selected = files[which];
+                    String source = "asset:character/" + selected;
+                    etAvatarImageUrl.setText(source);
+                    tvAvatarStatus.setText(getString(R.string.settings_avatar_asset_selected, selected));
+                })
+                .setNegativeButton(R.string.btn_cancel, null)
+                .show();
+        } catch (Exception e) {
+            Log.w(TAG, "读取应用内角色素材失败: " + e.getMessage(), e);
+            showToast(getString(R.string.settings_avatar_asset_empty));
+        }
+    }
+
+    private void onOutingBackgroundPicked(@Nullable Uri uri) {
+        if (uri == null) {
+            return;
+        }
+        try {
+            getContentResolver().takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (Exception ignored) {
+        }
+        etOutingBgImageUrl.setText(uri.toString());
+        tvOutingStatus.setText(R.string.settings_outing_bg_import_hint);
     }
 
     @Nullable
@@ -497,5 +791,76 @@ public class SettingsActivity extends BaseActivity {
         tvStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         Log.w(TAG, message);
+    }
+
+    private static class OutingBackgroundAdapter extends RecyclerView.Adapter<OutingBackgroundAdapter.BackgroundViewHolder> {
+
+        private final List<OutingBackgroundStore.Entry> items;
+        private final OnBackgroundRemoveListener removeListener;
+
+        OutingBackgroundAdapter(List<OutingBackgroundStore.Entry> items, OnBackgroundRemoveListener removeListener) {
+            this.items = items;
+            this.removeListener = removeListener;
+        }
+
+        void submit(List<OutingBackgroundStore.Entry> newItems) {
+            items.clear();
+            if (newItems != null) {
+                items.addAll(newItems);
+            }
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public BackgroundViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_outing_background_manage, parent, false);
+            return new BackgroundViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull BackgroundViewHolder holder, int position) {
+            OutingBackgroundStore.Entry item = items.get(position);
+            holder.tvName.setText(item.placeName);
+            holder.tvEnvironment.setText(item.environment);
+            holder.tvImageUrl.setText(TextUtils.isEmpty(item.imageUrl) ? "未填写图片地址" : item.imageUrl);
+            holder.tvDelta.setText(holder.itemView.getContext().getString(R.string.affection_plus_format, item.affectionDelta));
+            holder.btnRemove.setOnClickListener(v -> {
+                if (removeListener != null) {
+                    removeListener.onRemove(item.id);
+                }
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+
+        static class BackgroundViewHolder extends RecyclerView.ViewHolder {
+            final TextView tvName;
+            final TextView tvEnvironment;
+            final TextView tvImageUrl;
+            final TextView tvDelta;
+            final Button btnRemove;
+
+            BackgroundViewHolder(@NonNull View itemView) {
+                super(itemView);
+                tvName = itemView.findViewById(R.id.tv_outing_manage_name);
+                tvEnvironment = itemView.findViewById(R.id.tv_outing_manage_environment);
+                tvImageUrl = itemView.findViewById(R.id.tv_outing_manage_image_url);
+                tvDelta = itemView.findViewById(R.id.tv_outing_manage_delta);
+                btnRemove = itemView.findViewById(R.id.btn_outing_manage_remove);
+            }
+        }
+
+        interface OnBackgroundRemoveListener {
+            void onRemove(long id);
+        }
+    }
+
+    private static class DressOutfitSnapshot {
+        public String id;
+        public String name;
     }
 }

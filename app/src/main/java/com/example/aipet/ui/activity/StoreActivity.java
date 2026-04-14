@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 商店页：展示可选服装及说明。
+ * 商店页：展示可购买的一次性好感道具。
  */
 public class StoreActivity extends BaseActivity {
 
@@ -40,7 +40,7 @@ public class StoreActivity extends BaseActivity {
         rvStoreItems = bind(R.id.rv_store_items);
         tvSelectionHint = bind(R.id.tv_store_selection_hint);
 
-        List<StoreItem> items = buildOutfitItems();
+        List<StoreItem> items = buildConsumableItems();
         rvStoreItems.setLayoutManager(new LinearLayoutManager(this));
         rvStoreItems.setAdapter(new StoreItemAdapter(items, item -> {
             selectedItem = item;
@@ -50,28 +50,42 @@ public class StoreActivity extends BaseActivity {
         click(R.id.btn_store_confirm, v -> confirmSelection());
     }
 
-    private List<StoreItem> buildOutfitItems() {
+        private List<StoreItem> buildConsumableItems() {
         List<StoreItem> items = new ArrayList<>();
         items.add(new StoreItem(
-                "default",
-                getString(R.string.store_item_default_name),
-                getString(R.string.store_item_default_desc),
-                R.drawable.ic_outfit,
-                2
+            "biscuit",
+            getString(R.string.food_item_biscuit_name),
+            getString(R.string.food_item_biscuit_desc),
+            R.drawable.ic_feed,
+            3
         ));
         items.add(new StoreItem(
-                "hoodie",
-                getString(R.string.store_item_hoodie_name),
-                getString(R.string.store_item_hoodie_desc),
-                R.drawable.ic_outfit,
-                3
+            "fruit",
+            getString(R.string.food_item_fruit_name),
+            getString(R.string.food_item_fruit_desc),
+            R.drawable.ic_feed,
+            4
         ));
         items.add(new StoreItem(
-                "formal",
-                getString(R.string.store_item_formal_name),
-                getString(R.string.store_item_formal_desc),
-                R.drawable.ic_outfit,
-                3
+            "energy",
+            getString(R.string.food_item_energy_name),
+            getString(R.string.food_item_energy_desc),
+            R.drawable.ic_feed,
+            6
+        ));
+        items.add(new StoreItem(
+            "daily_clean",
+            getString(R.string.store_item_daily_clean_name),
+            getString(R.string.store_item_daily_clean_desc),
+            R.drawable.ic_shop,
+            2
+        ));
+        items.add(new StoreItem(
+            "daily_toy",
+            getString(R.string.store_item_daily_toy_name),
+            getString(R.string.store_item_daily_toy_desc),
+            R.drawable.ic_shop,
+            5
         ));
         return items;
     }

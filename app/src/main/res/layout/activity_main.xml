@@ -5,8 +5,23 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_screen_atmosphere"
+    android:clipChildren="false"
+    android:clipToPadding="false"
     android:paddingLeft="@dimen/home_page_side_margin"
     android:paddingRight="@dimen/home_page_side_margin">
+
+    <ImageView
+        android:id="@+id/iv_main_background"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="-12dp"
+        android:layout_marginEnd="-12dp"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <FrameLayout
         android:id="@+id/card_pet_stage"
@@ -24,8 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:contentDescription="@string/home_cd_pet_avatar"
-            android:scaleType="centerInside"
-            android:src="@drawable/ic_pet_avatar_placeholder" />
+            android:scaleType="fitCenter" />
 
         <TextView
             android:id="@+id/tv_pet_avatar_placeholder"
@@ -39,23 +53,9 @@
             android:paddingBottom="6dp"
             android:text="@string/home_pet_avatar_placeholder_hint"
             android:textColor="@android:color/white"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/tv_pet_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="12dp"
-            android:background="@drawable/bg_home_meta_chip"
-            android:paddingLeft="12dp"
-            android:paddingTop="6dp"
-            android:paddingRight="12dp"
-            android:paddingBottom="6dp"
-            android:text="@string/home_pet_name_placeholder"
-            android:textColor="@android:color/white"
-            android:textSize="13sp"
-            android:textStyle="bold" />
     </FrameLayout>
 
     <LinearLayout
@@ -73,7 +73,7 @@
             android:id="@+id/tv_time"
             android:layout_width="110dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_home_time_chip_clear"
+            android:background="@drawable/bg_home_info_chip_soft"
             android:paddingLeft="10dp"
             android:paddingTop="4dp"
             android:paddingRight="10dp"
@@ -105,7 +105,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@drawable/bg_home_meta_chip_clear"
+                android:background="@drawable/bg_home_info_chip_soft"
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:paddingLeft="10dp"
@@ -161,7 +161,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="4dp"
-        android:background="@drawable/bg_home_meta_chip_clear"
+        android:background="@drawable/bg_home_info_chip_soft"
         android:paddingLeft="10dp"
         android:paddingTop="4dp"
         android:paddingRight="10dp"
@@ -173,10 +173,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layout_pet_switcher" />
 
-    <View
+    <ImageView
         android:id="@+id/layout_content_slot"
         android:layout_width="0dp"
         android:layout_height="@dimen/home_content_height"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_date" />
@@ -184,16 +186,17 @@
     <LinearLayout
         android:id="@+id/layout_top_reply_bubbles"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
         android:clipChildren="true"
         android:clipToPadding="true"
         android:elevation="24dp"
+        android:gravity="center_horizontal|bottom"
         android:orientation="vertical"
         android:paddingBottom="8dp"
         app:layout_constraintBottom_toTopOf="@+id/layout_bottom_nav"
-        app:layout_constraintEnd_toStartOf="@+id/layout_side_actions"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/layout_content_slot" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
         android:id="@+id/layout_side_actions"

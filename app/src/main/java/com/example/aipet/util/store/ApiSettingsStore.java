@@ -28,7 +28,8 @@ public class ApiSettingsStore {
         String avatarUploadUrl = SPUtils.getString(appContext, Constants.KEY_AVATAR_UPLOAD_URL, "");
         String avatarRemoveBgUrl = SPUtils.getString(appContext, Constants.KEY_AVATAR_REMOVE_BG_URL, "");
         boolean avatarAutoProcess = SPUtils.getString(appContext, Constants.KEY_AVATAR_AUTO_PROCESS, "false").equals("true");
-        return new ApiSettings(provider, apiUrl, apiKey, modelName, avatarImageUrl, avatarUploadUrl, avatarRemoveBgUrl, avatarAutoProcess);
+        boolean avatarPreserveOriginal = SPUtils.getString(appContext, Constants.KEY_AVATAR_PRESERVE_ORIGINAL, "false").equals("true");
+        return new ApiSettings(provider, apiUrl, apiKey, modelName, avatarImageUrl, avatarUploadUrl, avatarRemoveBgUrl, avatarAutoProcess, avatarPreserveOriginal);
     }
 
     public void save(@NonNull ApiSettings settings) {
@@ -40,6 +41,7 @@ public class ApiSettingsStore {
         SPUtils.putString(appContext, Constants.KEY_AVATAR_UPLOAD_URL, settings.avatarUploadUrl);
         SPUtils.putString(appContext, Constants.KEY_AVATAR_REMOVE_BG_URL, settings.avatarRemoveBgUrl);
         SPUtils.putString(appContext, Constants.KEY_AVATAR_AUTO_PROCESS, String.valueOf(settings.avatarAutoProcess));
+        SPUtils.putString(appContext, Constants.KEY_AVATAR_PRESERVE_ORIGINAL, String.valueOf(settings.avatarPreserveOriginal));
     }
 
     public static class ApiSettings {
@@ -51,10 +53,11 @@ public class ApiSettingsStore {
         public final String avatarUploadUrl;
         public final String avatarRemoveBgUrl;
         public final boolean avatarAutoProcess;
+        public final boolean avatarPreserveOriginal;
 
         public ApiSettings(String provider, String apiUrl, String apiKey, String modelName,
                            String avatarImageUrl, String avatarUploadUrl, String avatarRemoveBgUrl,
-                           boolean avatarAutoProcess) {
+                           boolean avatarAutoProcess, boolean avatarPreserveOriginal) {
             this.provider = provider;
             this.apiUrl = apiUrl;
             this.apiKey = apiKey;
@@ -63,6 +66,7 @@ public class ApiSettingsStore {
             this.avatarUploadUrl = avatarUploadUrl;
             this.avatarRemoveBgUrl = avatarRemoveBgUrl;
             this.avatarAutoProcess = avatarAutoProcess;
+            this.avatarPreserveOriginal = avatarPreserveOriginal;
         }
     }
 }
